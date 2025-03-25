@@ -3,50 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Play Great Gamer, an action-packed online game that challenges your survival skills. Dive into an immersive gaming experience now!">
-    <meta name="keywords" content="Great Gamer, online game, survival game, play games online, monster survivors">
+    <meta name="description" content="Play Tetris on Great Gamer - A colorful, engaging, and classic block puzzle game!">
+    <meta name="keywords" content="Great Gamer, Tetris, online game, puzzle game, block game, play Tetris online">
     <meta name="author" content="GreatGamer.online">
     <link rel="canonical" href="https://greatgamer.online/">
-    <title>Great Gamer - Play Online Now!</title>
+    <title>Great Gamer - Play Tetris Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        canvas { 
+            border: 2px solid #333;
+            background-color: #f8f9fa;
+            display: block;
+            margin: auto;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-900">
-    <div class="container mx-auto p-6 max-w-4xl">
+    <div class="container mx-auto p-6 max-w-4xl text-center">
         <!-- 游戏标题 -->
-        <h1 class="text-4xl font-bold text-center text-blue-600">Great Gamer</h1>
-        
-        <!-- 简短介绍 -->
-        <p class="text-center text-lg mt-2 text-gray-700">An immersive online survival game where you fight against monsters and test your skills.</p>
-        
-        <!-- 游戏 IFRAME -->
-        <div class="mt-6">
-            <h2 class="text-2xl font-semibold text-gray-800">Play Now</h2>
-            <div class="relative pt-[56.25%] w-full">
-                <iframe src="https://cloud.onlinegames.io/games/2025/unity/monster-survivors/index-og.html"
-                        class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg border border-gray-300"
-                        allowfullscreen></iframe>
-            </div>
-        </div>
+        <h1 class="text-4xl font-bold text-blue-600">Great Gamer - Tetris</h1>
 
         <!-- 游戏介绍 -->
-        <div class="mt-8">
-            <h2 class="text-2xl font-semibold text-gray-800">About Great Gamer</h2>
-            <p class="text-gray-700 mt-2">
-                Great Gamer is an exciting survival game where players must defeat waves of monsters in a thrilling, action-packed experience.
-                Use strategy, quick reflexes, and powerful weapons to stay alive. Are you ready to prove you're the greatest gamer?
-            </p>
+        <p class="text-lg mt-2 text-gray-700">A modern and colorful version of the classic Tetris game. Stack the blocks and clear lines to score points!</p>
+
+        <!-- 游戏区域 -->
+        <div class="mt-6 flex justify-center">
+            <canvas id="tetris" width="300" height="600"></canvas>
         </div>
 
-        <!-- 游戏特点 -->
-        <div class="mt-8">
-            <h2 class="text-2xl font-semibold text-gray-800">Key Features</h2>
-            <ul class="list-disc list-inside text-gray-700 mt-2">
-                <li>Fast-paced monster battles</li>
-                <li>Multiple weapons and power-ups</li>
-                <li>Intuitive controls and smooth gameplay</li>
-                <li>Optimized for both PC and mobile devices</li>
+        <!-- 游戏操作说明 -->
+        <div class="mt-6">
+            <h2 class="text-2xl font-semibold text-gray-800">How to Play</h2>
+            <ul class="list-disc list-inside text-gray-700 mt-2 text-left max-w-md mx-auto">
+                <li><strong>Arrow Left (←)</strong> - Move left</li>
+                <li><strong>Arrow Right (→)</strong> - Move right</li>
+                <li><strong>Arrow Down (↓)</strong> - Drop faster</li>
+                <li><strong>Arrow Up (↑)</strong> - Rotate block</li>
+                <li><strong>Spacebar</strong> - Hard drop</li>
             </ul>
         </div>
     </div>
+
+    <script>
+        const canvas = document.getElementById("tetris");
+        const context = canvas.getContext("2d");
+        context.scale(30, 30); // Scale the game grid
+
+        // Colors for Tetris pieces
+        const COLORS = [null, "#FF0D72", "#0DC2FF", "#0DFF72", "#F538FF", "#FF8E0D", "#3877FF", "#FFE138"];
+
+        // Tetris shapes
+        const SHAPES = [
+            [],
+            [[0,1,0], [1,1,1]], // T
+            [[0,0,1], [1,1,1]], // L
+            [[1,0,0], [1,1,1]], // J
+            [[1,1,0], [0,1,1]], // S
+            [[0,1,1], [1,1,0]], // Z
+            [[1,1,1,1]], // I
+            [[1,1], [1,1]]  // O
+        ];
+
+        const ROWS = 20;
+        const COLUMNS = 10;
+        const board = Array.from({ length: ROWS }, () => Array(COLUMNS).fill(0));
+
+        let piece = {
+            position: { x: 4, y: 0 },
+            shape: SHAPES[Math.floor(Math.random() * (SHAPES.length - 1)) + 1],
+            color: COLORS[Math.floor(Math.random() * (COLORS.length - 1)) + 1]
+        };
+
+        function drawBoard() {
+            board.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        context.fillStyle = COLORS[value];
+                        context.fillRect(x, y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        function drawPiece() {
+            context.fillStyle = piece.color;
+            piece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        context.fillRect(piece.position.x + x, piece.position.y + y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        function dropPiece() {
+            piece.position.y++;
+            if (collides()) {
+                piece.position.y--;
+                mergePiece();
+                resetPiece();
+            }
+        }
+
+        function collides() {
+            return piece.shape.some((row, dy) =>
+                row.some((value, dx) =>
+                    value &&
+                    (board[piece.position.y + dy] &&
+                        board[piece.position.y + dy][piece.position.x + dx]) !== 0
+                )
+            );
+        }
+
+        function mergePiece() {
+            piece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        board[piece.position.y + y][piece.position.x + x] = COLORS.indexOf(piece.color);
+                    }
+                });
+            });
+        }
+
+        function resetPiece() {
+            piece.shape = SHAPES[Math.floor(Math.random() * (SHAPES.length - 1)) + 1];
+            piece.color = COLORS[Math.floor(Math.random() * (COLORS.length - 1)) + 1];
+            piece.position = { x: 4, y: 0 };
+            if (collides()) {
+                board.forEach(row => row.fill(0)); // Reset board if game over
+            }
+        }
+
+        function update() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawBoard();
+            drawPiece();
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowLeft") piece.position.x--;
+            if (event.key === "ArrowRight") piece.position.x++;
+            if (event.key === "ArrowDown") piece.position.y++;
+            if (event.key === "ArrowUp") rotatePiece();
+            if (collides()) piece.position.y--;
+        });
+
+        function rotatePiece() {
+            const newShape = piece.shape[0].map((_, i) =>
+                piece.shape.map(row => row[i]).reverse()
+            );
+            piece.shape = newShape;
+        }
+
+        update();
+        setInterval(dropPiece, 500); // Drop piece every 500ms
+    </script>
 </body>
 </html>
