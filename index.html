@@ -1,305 +1,1102 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Play the best HTML5 games online for free on Great Gamer. Enjoy basketball, soccer, racing, and more!">
-    <meta name="keywords" content="great gamer, online games, HTML5 games, free games, browser games">
-    <meta name="author" content="Great Gamer">
-    <link rel="canonical" href="https://greatgamer.online/">
-    <title>Great Gamer - Play the Best HTML5 Games Online</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>单词消消乐（科普版7下）</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4a6baf;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .game-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        select, button {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        select {
+            min-width: 200px;
+        }
+        
+        button {
+            background-color: #4a6baf;
+            color: white;
+            border: none;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #3a5a9f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .progress-info {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: #4a6baf;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card.selected {
+            background-color: #e1f5fe;
+            border: 2px solid #4a6baf;
+        }
+        
+        .card.matched {
+            visibility: hidden;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.5s;
+        }
+        
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(74, 107, 175, 0.1) 0%, rgba(74, 107, 175, 0.3) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .card.selected::after {
+            opacity: 1;
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .celebration.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .celebration h2 {
+            margin-bottom: 20px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall 5s linear infinite;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .certificate {
+            display: none;
+            background-color: #fff8e1;
+            padding: 30px;
+            border: 20px solid #ffd54f;
+            border-radius: 5px;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .certificate.show {
+            display: block;
+        }
+        
+        .certificate h2 {
+            color: #4a6baf;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .certificate h3 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+        
+        .certificate p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .certificate .signature {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .certificate .seal {
+            position: absolute;
+            right: 50px;
+            bottom: 50px;
+            width: 100px;
+            height: 100px;
+            background-color: #d32f2f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transform: rotate(-15deg);
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .card {
+                height: 70px;
+                font-size: 0.8rem;
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .certificate {
+                padding: 15px;
+                border-width: 10px;
+            }
+            
+            .certificate h2 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-board {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
+            }
+            
+            .card {
+                height: 60px;
+                font-size: 0.7rem;
+            }
+            
+            .game-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            select, button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
-
-    <header class="text-center py-6 bg-white shadow-md">
-        <h1 class="text-4xl font-bold text-blue-600">Great Gamer</h1>
-        <p class="text-lg text-gray-600">Play the best HTML5 games online for free!</p>
-    </header>
-
-    <main class="max-w-6xl mx-auto p-4">
-        <section>
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Featured Games</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                <!-- Game 1: Basketball -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Basketball Hoop</h3>
-                    <p class="text-gray-600">Test your shooting skills in this fun basketball game.</p>
-                    <a href="https://cloud.onlinegames.io/games/2024/construct/311/basket-hoop/index-og.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/843/responsive/Basket-Hoop-xs.jpg" alt="Basketball Hoop" class="w-full h-48 object-cover rounded-lg">
-                    </a>
+<body>
+    <div class="container">
+        <h1>单词消消乐（科普版7下）</h1>
+        
+        <div class="game-controls">
+            <select id="unit-select">
+                <option value="all">全部单元</option>
+                <option value="unit7">Unit 7</option>
+                <option value="unit8">Unit 8</option>
+                <option value="unit9">Unit 9</option>
+                <option value="unit10">Unit 10</option>
+                <option value="unit11">Unit 11</option>
+                <option value="unit12">Unit 12</option>
+            </select>
+            <button id="start-btn">开始游戏</button>
+            <button id="reset-btn" disabled>重新开始</button>
+        </div>
+        
+        <div class="progress-info" id="progress-info"></div>
+        
+        <div class="game-info">
+            <div>得分: <span id="score">0</span></div>
+            <div>剩余配对: <span id="remaining">0</span></div>
+        </div>
+        
+        <div class="game-board" id="game-board"></div>
+        
+        <div class="celebration" id="celebration">
+            <h2>恭喜完成本轮!</h2>
+            <p>你的得分: <span id="celebration-score">0</span></p>
+            <button id="continue-btn">继续挑战</button>
+        </div>
+        
+        <div class="certificate" id="certificate">
+            <h2>荣誉证书</h2>
+            <h3>Certificate of Achievement</h3>
+            <p>兹证明</p>
+            <p><strong id="player-name">[玩家]</strong></p>
+            <p>成功完成了所有6个单元的单词消消乐挑战</p>
+            <p>展现了卓越的词汇记忆能力和坚持不懈的精神</p>
+            <p>特发此证，以资鼓励</p>
+            <div class="signature">
+                <div>
+                    <p>___________________</p>
+                    <p>签名</p>
                 </div>
-
-                <!-- Game 2: Pill Soccer -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Pill Soccer</h3>
-                    <p class="text-gray-600">Compete in this hilarious soccer game with wobbly players.</p>
-                    <a href="https://cloud.onlinegames.io/games/2024/gm/games3/pill-soccer/index.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/842/responsive/Pill-Soccer-xs.jpg" alt="Pill Soccer" class="w-full h-48 object-cover rounded-lg">
-                    </a>
+                <div>
+                    <p>___________________</p>
+                    <p>日期</p>
                 </div>
-
-                <!-- Game 3: Golf Orbit -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Golf Orbit</h3>
-                    <p class="text-gray-600">Swing your golf club and launch the ball into orbit!</p>
-                    <a href="https://html5.gamedistribution.com/02ff01e6e9f7451ba28d889a2a55eec9/?gd_sdk_referrer_url=https://www.onlinegames.io/golf-orbit/" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/953/responsive/Golf-Orbit-Play-Online-xs.jpg" alt="Golf Orbit" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 4: Bike Ride -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Bike Ride</h3>
-                    <p class="text-gray-600">Ride your bike through crazy obstacle courses.</p>
-                    <a href="https://playhop.com/app/257923?utm_source=distrib&amp;is-united-page=1&amp;skip-guard=1&amp;header=no&amp;utm_medium=cristian-ovidiu&amp;clid=8531463" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/885/responsive/obby-but-your-on-a-bike-xs.jpg" alt="Bike Ride" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 5: Real Flight Simulator -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Real Flight Simulator</h3>
-                    <p class="text-gray-600">Experience realistic flight simulation.</p>
-                    <a href="https://www.onlinegames.io/games/2023/unity/real-flight-simulator/index.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/342/responsive/Real-Flight-Simulator-2-xs.jpg" alt="Real Flight Simulator" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 6: Get On Top -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Get On Top</h3>
-                    <p class="text-gray-600">Battle against your friend in a physics-based fight!</p>
-                    <a href="https://www.onlinegames.io/games/2024/code/6/get-on-top/index.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/697/responsive/Get-on-Top-xs.jpg" alt="Get On Top" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 7: Tank Arena -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Tank Arena</h3>
-                    <p class="text-gray-600">Dominate the battlefield in this tank battle game.</p>
-                    <a href="https://cloud.onlinegames.io/games/2025/construct/293/tank-arena/index-og.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/956/responsive/Tank-Arena-Online-xs.jpg" alt="Tank Arena" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 8: Vex 7 -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Vex 7</h3>
-                    <p class="text-gray-600">Navigate through deadly obstacles in this parkour game.</p>
-                    <a href="https://html5.gamedistribution.com/0c454c9562d249d28ba3a2b50564042c/?gd_sdk_referrer_url=https://www.onlinegames.io/vex-7/" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/947/responsive/vex-7-online-xs.jpg" alt="Vex 7" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 9: Edy's Car Simulator -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Edy's Car Simulator</h3>
-                    <p class="text-gray-600">Take control of the wheel in this driving simulator game.</p>
-                    <a href="https://www.onlinegames.io/games/2022/unity/edys-car-simulator/index.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/238/responsive/Edys-Car-Simulator-Online-xs.jpg" alt="Edy's Car Simulator" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 10: Monster Survivors -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Monster Survivors</h3>
-                    <p class="text-gray-600">Survive against monsters in this action-packed game.</p>
-                    <a href="https://cloud.onlinegames.io/games/2025/unity/monster-survivors/index-og.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/942/responsive/Monster-survivors-xs.jpg" alt="Monster Survivors" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 11: Squad Shooter -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Squad Shooter</h3>
-                    <p class="text-gray-600">Join the squad and take on enemies in this shooting game.</p>
-                    <a href="https://cloud.onlinegames.io/games/2024/unity2/squad-shooter/index-og.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/946/responsive/Squad-Shooter-xs.jpg" alt="Squad Shooter" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                 <!-- Game 12: Run 3D -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Run 3D</h3>
-                    <p class="text-gray-600">Race through challenging 3D environments.</p>
-                    <a href="https://html5.gamedistribution.com/e103db40071a4af38aab2061bf799455/?gd_sdk_referrer_url=https://www.onlinegames.io/run-3d/" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/932/responsive/run-3d-online-xs.jpg" alt="Run 3D" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 13: Wordle -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Wordle</h3>
-                    <p class="text-gray-600">Solve the daily word puzzle in this classic word game.</p>
-                    <a href="https://cloud.onlinegames.io/games/2025/html/wordle/index-og.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/938/responsive/wordle-xs.jpg" alt="Wordle" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 14: Only Up Obby -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Only Up Obby</h3>
-                    <p class="text-gray-600">Navigate through tricky obstacle courses.</p>
-                    <a href="https://playhop.com/app/335573?utm_source=distrib&amp;is-united-page=1&amp;skip-guard=1&amp;header=no&amp;utm_medium=cristian-ovidiu&amp;clid=8531463" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/859/responsive/Only-Up-Obby-xs.jpg" alt="Only Up Obby" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 15: Only Up Parkour -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Only Up Parkour</h3>
-                    <p class="text-gray-600">Parkour your way to victory.</p>
-                    <a href="https://html5.gamedistribution.com/c7a11f86eeda4a2b88e8d5ad2ba2f41d/?gd_sdk_referrer_url=https://www.onlinegames.io/only-up-parkour" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/615/responsive/Only-Up-Parkour-xs.jpg" alt="Only Up Parkour" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 16: Horse Riding Simulator -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Horse Riding Simulator</h3>
-                    <p class="text-gray-600">Ride your horse through various landscapes.</p>
-                    <a href="https://html5.gamedistribution.com/2eea8dbe4c7240e6bb47b187b343727f/?gd_sdk_referrer_url=https://www.onlinegames.io/horse-riding-simulator" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/506/responsive/Horse-Riding-Simulator-xs.jpg" alt="Horse Riding Simulator" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 17: Jeep Racing -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Jeep Racing</h3>
-                    <p class="text-gray-600">Race your jeep through extreme tracks.</p>
-                    <a href="https://www.onlinegames.io/games/2023/freezenova.com/jeep-racing/index.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/564/responsive/Jeep-Racing-xs.jpg" alt="Jeep Racing" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 18: Draw the Bridge -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold text-gray-700">Draw the Bridge</h3>
-                    <p class="text-gray-600">Draw bridges to guide your vehicle to safety.</p>
-                    <a href="https://www.onlinegames.io/games/2021/4/draw-the-bridge/index.html" target="_blank">
-                        <img src="https://www.onlinegames.io/media/posts/164/responsive/Draw-the-Bridge-Game-xs.jpg" alt="Draw the Bridge" class="w-full h-48 object-cover rounded-lg">
-                    </a>
-                </div>
-
-                <!-- Game 19: Dinosaur Game -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Dinosaur Game</h3>
-    <p class="text-gray-600">Help the dinosaur jump over obstacles.</p>
-    <a href="https://www.onlinegames.io/games/2023/q2/dinosaur-game/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/417/responsive/Dinosaur-Game-Online-lg.jpg" alt="Dinosaur Game" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 20: Duck Life -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Duck Life</h3>
-    <p class="text-gray-600">Train your duck and compete in various challenges.</p>
-    <a href="https://www.onlinegames.io/games/2024/wix/duck-life/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/766/responsive/Duck-Life-lg.jpg" alt="Duck Life" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 21: Valkyrie RPG -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Valkyrie RPG</h3>
-    <p class="text-gray-600">Embark on an epic RPG adventure as a Valkyrie.</p>
-    <a href="https://html5.gamedistribution.com/8cdee50c7dc3458fbbb14fa4974bc82c/?gd_sdk_referrer_url=https://www.onlinegames.io/valkyrie-rpg" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/547/responsive/Valkyrie-RPG-lg.jpg" alt="Valkyrie RPG" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 22: Deer Hunter -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Deer Hunter</h3>
-    <p class="text-gray-600">Become the ultimate deer hunter in this exciting shooting game.</p>
-    <a href="https://www.onlinegames.io/games/2021/1/deer-hunter/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/591/responsive/Deer-Hunter-lg.jpg" alt="Deer Hunter" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 23: Slow Roads -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Slow Roads</h3>
-    <p class="text-gray-600">Navigate through slow, winding roads in this challenging driving game.</p>
-    <a href="https://www.onlinegames.io/games/2024/more/slow-roads/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/725/responsive/Slow-Roads-io-Play-lg.jpg" alt="Slow Roads" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 24: Stickman Ragdoll -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Stickman Ragdoll</h3>
-    <p class="text-gray-600">Watch the stickman go through hilarious ragdoll physics.</p>
-    <a href="https://unblocked-games.s3.amazonaws.com/games/stickman-ragdoll/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/57/responsive/Stickman-Ragdoll-Game-lg.jpg" alt="Stickman Ragdoll" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 25: Moto Trials -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Moto Trials</h3>
-    <p class="text-gray-600">Complete various challenging motorcycle trials and stunts.</p>
-    <a href="https://www.onlinegames.io/games/2021/unity/moto-trials/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/523/responsive/Moto-Trials-lg.jpg" alt="Moto Trials" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 26: Car Rush -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Car Rush</h3>
-    <p class="text-gray-600">Race through traffic in this fast-paced car racing game.</p>
-    <a href="https://www.onlinegames.io/games/2023/code/car-rush/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/575/responsive/Car-Rush-lg.jpg" alt="Car Rush" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 27: The Farmer -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">The Farmer</h3>
-    <p class="text-gray-600">Take care of your farm and grow crops in this relaxing simulation game.</p>
-    <a href="https://www.onlinegames.io/games/2022/unity/the-farmer/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/533/responsive/The-Farmer-lg.jpg" alt="The Farmer" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 28: Electron Dash -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Electron Dash</h3>
-    <p class="text-gray-600">Dash through electron particles in this fast-paced action game.</p>
-    <a href="https://www.onlinegames.io/games/2023/mjs/electron-dash/index.html" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/464/responsive/Electron-Dash-lg.jpg" alt="Electron Dash" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 29: Quordle -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Quordle</h3>
-    <p class="text-gray-600">Solve words in this challenging Quordle puzzle game.</p>
-    <a href="https://quordlewordle.io/game/quordlegame/" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/606/responsive/Quordle-Today-lg.jpg" alt="Quordle" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-
-<!-- Game 30: Hoop World -->
-<div class="bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-xl font-bold text-gray-700">Hoop World</h3>
-    <p class="text-gray-600">Play basketball in this fun and addictive 3D hoop game.</p>
-    <a href="https://html5.gamedistribution.com/27f311ee037a4df5a300b486cdbf9c63/?gd_sdk_referrer_url=https://gamedistribution.com/games/hoop-world-3d/" target="_blank">
-        <img src="https://www.onlinegames.io/media/posts/976/responsive/Hoop-World-lg.jpg" alt="Hoop World" class="w-full h-48 object-cover rounded-lg">
-    </a>
-</div>
-                
             </div>
-        </section>
-    </main>
+            <div class="seal">印</div>
+        </div>
+    </div>
+    
+    <audio id="success-sound" src="success.mp3" preload="auto"></audio>
+    <audio id="fail-sound" src="fail.mp3" preload="auto"></audio>
+    <audio id="celebration-sound" src="celebration.mp3" preload="auto"></audio>
+    <audio id="complete-sound" src="complete.mp3" preload="auto"></audio>
+    
+    <script>
+        // 单词库数据 - 科普版7下 Unit 7-12
+        const wordData = {
+            unit7: [
+                { english: "smart", chinese: "聪明的" },
+                { english: "shopper", chinese: "购物者" },
+                { english: "mall", chinese: "购物商场；购物广场" },
+                { english: "market", chinese: "市场" },
+                { english: "bookstore", chinese: "书店" },
+                { english: "supermarket", chinese: "超市；超级市场" },
+                { english: "yuan", chinese: "元（中国货币单位）" },
+                { english: "sell", chinese: "出售，售卖；销售得……；卖出" },
+                { english: "fruit", chinese: "水果；果实" },
+                { english: "scarf", chinese: "围巾；披巾；头巾" },
+                { english: "would", chinese: "（客气地建议或邀请）；（表示愿意、不愿意等）；将会" },
+                { english: "sure", chinese: "当然" },
+                { english: "list", chinese: "清单；目录" },
+                { english: "salt", chinese: "盐，食盐" },
+                { english: "bag", chinese: "购物袋；手提袋；提包" },
+                { english: "strawberry", chinese: "草莓" },
+                { english: "kilo", chinese: "千克；公斤" },
+                { english: "coffee", chinese: "咖啡" },
+                { english: "cabbage", chinese: "甘蓝；卷心菜" },
+                { english: "chicken", chinese: "鸡肉；鸡" },
+                { english: "tofu", chinese: "豆腐" },
+                { english: "watermelon", chinese: "西瓜" },
+                { english: "carrot", chinese: "胡萝卜" },
+                { english: "camera", chinese: "照相机；摄影机" },
+                { english: "trousers", chinese: "（pl.）裤子" },
+                { english: "party", chinese: "聚会，宴会，联欢会；政党" },
+                { english: "everything", chinese: "所有事物；一切；每件事" },
+                { english: "sale", chinese: "特价销售；出售" },
+                { english: "online", chinese: "线上的；网上的 ；在网上" },
+                { english: "mum", chinese: "（mom ）妈妈" },
+                { english: "OK", chinese: "好；行 ；安然无恙" },
+                { english: "plan", chinese: "计划，谋划；打算 ；计划；（详细）规划" },
+                { english: "carry", chinese: "拿；提；搬" },
+                { english: "heavy", chinese: "重的；厚的" },
+                { english: "price", chinese: "价格；价钱" },
+                { english: "skirt", chinese: "女裙；裙子" },
+                { english: "decide", chinese: "决定" },
+                { english: "pocket", chinese: "口袋" },
+                { english: "pocket money", chinese: "零花钱" },
+                { english: "save", chinese: "节省；攒钱；挽救" },
+                { english: "notebook", chinese: "笔记本" },
+                { english: "between", chinese: "在……之间；介于……之间" },
+                { english: "wisely", chinese: "明智地" },
+                { english: "waste", chinese: "浪费 ；浪费；垃圾" },
+                { english: "try", chinese: "试图，努力；试用；试" },
+                { english: "possible", chinese: "可能；能做到（或取得） ；合适的人（或物）" },
+                { english: "store", chinese: "（大型）百货商店，商店 ；保存" },
+                { english: "careful", chinese: "慎重的，细致的，精心的；小心，注意，谨慎" },
+                { english: "expensive", chinese: "昂贵的；价格高的" },
+                { english: "choice", chinese: "选择；选中的人（或物）" },
+                { english: "check", chinese: "检查；查看" },
+                { english: "payment", chinese: "付款；支付；收款" },
+                { english: "again", chinese: "再一次；又一次" },
+                { english: "example", chinese: "例子；实例" },
+                { english: "if", chinese: "如果；倘若" },
+                { english: "share", chinese: "分享；合用" },
+                { english: "same", chinese: "相同的" },
+                { english: "pay", chinese: "付费；付酬" },
+                { english: "piece", chinese: "片；块" },
+                { english: "bread", chinese: "面包" },
+                { english: "sandwich", chinese: "三明治" },
+                { english: "thirsty", chinese: "口渴的" },
+                { english: "packet", chinese: "小袋；小包装纸袋；小件包裹" },
+                { english: "meat", chinese: "肉" },
+                { english: "cost", chinese: "价钱为 ；费用" },
+                { english: "bed", chinese: "床" },
+                { english: "breakfast", chinese: "早餐；早饭" },
+                { english: "bowl", chinese: "碗；盆" },
+                { english: "scissors", chinese: "（pl.）剪刀" },
+                { english: "colored", chinese: "有……色的；色彩……的" },
+                { english: "cup", chinese: "杯子；一杯（的量）" },
+                { english: "cotton", chinese: "棉织物；棉布；棉花" },
+                { english: "sock", chinese: "短袜" },
+                { english: "may", chinese: "可以；也许" },
+                { english: "honey", chinese: "蜂蜜" },
+                { english: "sweater", chinese: "套头衫；套头毛衣" },
+                { english: "cheap", chinese: "便宜的" },
+                { english: "bad", chinese: "不适合的；质量差的；感到愧疚；令人不快的，坏的" },
+                { english: "group", chinese: "组；群" },
+                { english: "carefully", chinese: "小心地，谨慎地；细致地" },
+                { english: "ad", chinese: "广告" },
+                { english: "beginning", chinese: "开头；开端" },
+                { english: "banana", chinese: "香蕉" },
+                { english: "just", chinese: "仅仅；只是；刚好；刚才" },
+                { english: "stay", chinese: "待；保持" },
+                { english: "size", chinese: "尺码，号；大小 ；标定……的大小" },
+                { english: "special", chinese: "特殊的，特别的；特设的 ；特别活动；特价" },
+                { english: "wait", chinese: "等；等待" },
+                { english: "free", chinese: "不收费的；空闲的；自由的 ；释放；使摆脱" },
+                { english: "order", chinese: "订单；顺序；条理；秩序；命令" }
+            ],
+            unit8: [
+                { english: "planet", chinese: "行星" },
+                { english: "ocean", chinese: "大海，海洋（the ocean）" },
+                { english: "metre", chinese: "米 （kilometer 千米；公里）" },
+                { english: "through", chinese: "穿过；贯穿" },
+                { english: "eastern", chinese: "东方的；东部的" },
+                { english: "freshwater", chinese: "淡水的" },
+                { english: "million", chinese: "一百万" },
+                { english: "inland", chinese: "（在）内陆的 ；向（或在）内陆" },
+                { english: "north - east", chinese: "东北；东北方；东北地区" },
+                { english: "large", chinese: "大的，大量的；大号的；广泛的，众多的" },
+                { english: "deep", chinese: "深的，厚的；纵深的，宽的 ；深深地；至深处" },
+                { english: "wide", chinese: "宽的；宽阔的" },
+                { english: "everywhere", chinese: "到处" },
+                { english: "ground", chinese: "地，地面" },
+                { english: "into", chinese: "到……里面，进入" },
+                { english: "form", chinese: "（使）形成；产生；建立" },
+                { english: "cloud", chinese: "云；云彩" },
+                { english: "ice", chinese: "冰" },
+                { english: "drop", chinese: "滴，水珠 ；（使）掉落" },
+                { english: "full", chinese: "（有）大量的，丰富的；充满的；完全的" },
+                { english: "useful", chinese: "有用的；有帮助的" },
+                { english: "wash", chinese: "洗" },
+                { english: "outside", chinese: "在……外面 ；在外面" },
+                { english: "cycle", chinese: "循环" },
+                { english: "quick", chinese: "快的；迅速的" },
+                { english: "shower", chinese: "淋浴；淋浴间，淋浴器 ；（洗）淋浴" },
+                { english: "off", chinese: "（用以表示除去了某物）；休假；休息" },
+                { english: "tap", chinese: "水龙头" },
+                { english: "while", chinese: "当……的时候；而，然而" },
+                { english: "brush", chinese: "（用刷子）刷净，刷亮 ；刷子" },
+                { english: "tooth", chinese: "（pl.teeth ）牙；齿" },
+                { english: "reuse", chinese: "再次使用；重复使用" },
+                { english: "matter", chinese: "关乎……的事情；事情 ；事关紧要；要紧" },
+                { english: "fact", chinese: "事实，真相；现实" },
+                { english: "valuable", chinese: "宝贵的" },
+                { english: "enough", chinese: "足够的，充足的 ；足够地" },
+                { english: "once", chinese: "仅一次；一次；曾经 ；一……就" },
+                { english: "must", chinese: "必须 ；必须做（或看、买等）的事" },
+                { english: "collect", chinese: "收集；采集" },
+                { english: "dig", chinese: "掘（地）；挖（土）" },
+                { english: "worry", chinese: "担心，发愁；使担忧，使发愁 ；令人担忧的事；担心，忧虑" },
+                { english: "story", chinese: "故事；小说" },
+                { english: "cover", chinese: "覆盖；遮盖 ；覆盖物；躲避处" },
+                { english: "coastline", chinese: "海岸线；沿海地带" },
+                { english: "than", chinese: "（比较数量、距离等）多于，少于；（用于引出比较的第二部分）比" },
+                { english: "thousand", chinese: "一千" },
+                { english: "eighty", chinese: "八十" },
+                { english: "sixty", chinese: "六十" },
+                { english: "billion", chinese: "十亿" },
+                { english: "per cent", chinese: "百分之……" },
+                { english: "land", chinese: "陆地，大地；地带，土地" },
+                { english: "knock", chinese: "敲；击 ；敲击声；敲门（或窗户）声" },
+                { english: "door", chinese: "门" },
+                { english: "oh", chinese: "哦；啊；嘿" },
+                { english: "step", chinese: "迈步；步骤；阶段" },
+                { english: "litter", chinese: "乱扔 ；垃圾" },
+                { english: "suggestion", chinese: "建议；提议" },
+                { english: "search", chinese: "搜索；搜查" },
+                { english: "information", chinese: "信息" },
+                { english: "introduce", chinese: "介绍" },
+                { english: "machine", chinese: "机器，机械装置；计算机，电脑" },
+                { english: "dirty", chinese: "脏的；污秽的" },
+                { english: "bath", chinese: "洗澡；浴盆；澡堂" },
+                { english: "throw", chinese: "投；扔" },
+                { english: "away", chinese: "在（某距离）处；离开" },
+                { english: "still", chinese: "仍然 ；静止的" },
+                { english: "provide", chinese: "提供" },
+                { english: "protect", chinese: "保护；防护" },
+                { english: "soil", chinese: "土壤；领土" },
+                { english: "human", chinese: "人 ；人的" },
+                { english: "body", chinese: "身体" },
+                { english: "plastic", chinese: "塑料的 ；塑料" },
+                { english: "rubbish", chinese: "垃圾；废弃物" },
+                { english: "bin", chinese: "垃圾箱" },
+                { english: "shock", chinese: "震惊；令人震惊的事 ；使震惊；使惊愕" },
+                { english: "later", chinese: "后来的；以后的 ；后来；以后" },
+                { english: "develop", chinese: "（使）成长；发展" },
+                { english: "habit", chinese: "习惯" },
+                { english: "count", chinese: "重要；数数" },
+                { english: "daily", chinese: "每日的，日常的；按日的" }
+            ],
+            unit9: [
+                { english: "bank", chinese: "银行；岸；河畔" },
+                { english: "gym", chinese: "健身房；体育馆" },
+                { english: "hotel", chinese: "旅馆" },
+                { english: "theatre", chinese: "戏院；剧场 （theater）" },
+                { english: "museum", chinese: "博物馆" },
+                { english: "road", chinese: "路；道路" },
+                { english: "bridge", chinese: "桥" },
+                { english: "across", chinese: "从一边到另一边；横过" },
+                { english: "corner", chinese: "街角；拐角" },
+                { english: "excuse", chinese: "原谅 ；借口" },
+                { english: "cinema", chinese: "电影院" },
+                { english: "madam", chinese: "女士；夫人" },
+                { english: "could", chinese: "能，可以" },
+                { english: "policeman", chinese: "（pl.policemen）（男）警察" },
+                { english: "sir", chinese: "先生" },
+                { english: "line", chinese: "（铁）路线；线；行，列 ；沿……形成行（或列、排）" },
+                { english: "station", chinese: "公共汽车站，长途汽车站；火车站" },
+                { english: "change", chinese: "换乘；改变 ；改变" },
+                { english: "minute", chinese: "分钟" },
+                { english: "along", chinese: "沿着，顺着" },
+                { english: "until", chinese: "（till）直到……为止" },
+                { english: "crossing", chinese: "安全通行处；人行横道" },
+                { english: "left", chinese: "向左；左边的；左；左边" },
+                { english: "gift", chinese: "礼物；天赋；白送" },
+                { english: "build", chinese: "建造" },
+                { english: "speed", chinese: "速度；迅速；快速；加速" },
+                { english: "sign", chinese: "标志，招牌；迹象，预兆" },
+                { english: "stand", chinese: "站立，站起来；容忍，忍受" },
+                { english: "dark", chinese: "黑暗的；昏暗的" },
+                { english: "row", chinese: "划（船）" },
+                { english: "island", chinese: "岛" },
+                { english: "front", chinese: "前面；前部" },
+                { english: "safe", chinese: "处境（或情况）安全；安全的" },
+                { english: "myself", chinese: "我自己；亲自" },
+                { english: "evening", chinese: "晚上；傍晚" },
+                { english: "sad", chinese: "悲哀的，难过的；令人悲哀的，让人难过的" },
+                { english: "back", chinese: "回原处；背部；后部" },
+                { english: "tent", chinese: "帐篷" },
+                { english: "camp", chinese: "露营；宿营；营地" },
+                { english: "unforgettable", chinese: "令人难忘的" },
+                { english: "trip", chinese: "旅行" },
+                { english: "hold", chinese: "抓住；拿着；举行" },
+                { english: "follow", chinese: "遵循，听从；跟随" },
+                { english: "return", chinese: "返回；退还" },
+                { english: "hug", chinese: "拥抱" },
+                { english: "clear", chinese: "无云的；晴朗的；清晰易懂的；移走，搬走；转晴" },
+                { english: "safety", chinese: "安全" },
+                { english: "problem", chinese: "难题；困难" },
+                { english: "solve", chinese: "解决；处理" },
+                { english: "behind", chinese: "在……后面" },
+                { english: "post", chinese: "邮寄；邮件；帖子" },
+                { english: "office", chinese: "办公室" },
+                { english: "post office", chinese: "邮局" },
+                { english: "village", chinese: "村庄" },
+                { english: "beside", chinese: "在旁边" },
+                { english: "neighbour", chinese: "邻居（neighbor）" },
+                { english: "happen", chinese: "发生；碰巧" },
+                { english: "community", chinese: "社区" },
+                { english: "add", chinese: "增加；添加" },
+                { english: "cry", chinese: "喊叫；哭；喊叫，叫声" },
+                { english: "care", chinese: "关注，在意；关心，关怀；照料，护理；小心，谨慎" },
+                { english: "suddenly", chinese: "突然；忽然" },
+                { english: "shake", chinese: "摇动；抖动" },
+                { english: "sit", chinese: "坐" },
+                { english: "arrive", chinese: "到达" },
+                { english: "sleep", chinese: "睡眠；睡觉" },
+                { english: "soon", chinese: "很快，马上；快" },
+                { english: "hear", chinese: "听见;听说" },
+                { english: "kiss", chinese: "亲吻;吻" },
+                { english: "easy", chinese: "容易的" },
+                { english: "centre", chinese: "中心" },
+                { english: "service", chinese: "服务" },
+                { english: "pet", chinese: "宠物" },
+                { english: "Italian", chinese: "意大利(人)的;意大利人;意大利语" },
+                { english: "police", chinese: "警方" },
+                { english: "famous", chinese: "著名的;出名的" },
+                { english: "exciting", chinese: "令人兴奋的;令人激动的" },
+                { english: "tired", chinese: "疲劳的" },
+                { english: "yours", chinese: "你的(用于书信结尾的签名前);您的;你们的" },
+                { english: "turning", chinese: "岔路口" },
+                { english: "straight", chinese: "笔直地" }
+            ],
+            unit10: [
+                { english: "lend", chinese: "给予,提供(帮助、支持等);借给;借出" },
+                { english: "medical", chinese: "医疗的;医学的" },
+                { english: "heavily", chinese: "在很大程度上;大量地" },
+                { english: "volunteer", chinese: "志愿者;自愿做" },
+                { english: "yesterday", chinese: "在昨天;昨天" },
+                { english: "tennis", chinese: "网球" },
+                { english: "table tennis", chinese: "乒乓球运动" },
+                { english: "match", chinese: "比赛;竞赛;找相称的人(或物)" },
+                { english: "dad", chinese: "爸爸" },
+                { english: "exam", chinese: "检查,检验;考试" },
+                { english: "repair", chinese: "修理" },
+                { english: "voluntary", chinese: "无偿的,义务性的;自愿的,志愿的,主动的" },
+                { english: "experience", chinese: "经历;经验;经历;体验" },
+                { english: "leave", chinese: "忘了带,丢下;离开;遗弃" },
+                { english: "key", chinese: "钥匙;关键;最重要的;关键的" },
+                { english: "daughter", chinese: "女儿" },
+                { english: "lose", chinese: "丢失;输掉(比赛等)" },
+                { english: "pick", chinese: "采,摘;挑选" },
+                { english: "host", chinese: "主人;东道主" },
+                { english: "title", chinese: "标题,题目" },
+                { english: "ago", chinese: "以前" },
+                { english: "crowded", chinese: "拥挤的" },
+                { english: "meaningful", chinese: "重要的" },
+                { english: "town", chinese: "镇;集镇" },
+                { english: "offer", chinese: "主动提供,主动给予(某事物)" },
+                { english: "Dr.", chinese: "医生;博士" },
+                { english: "chat", chinese: "闲聊;聊天" },
+                { english: "kid", chinese: "小孩;年轻人" },
+                { english: "own", chinese: "自己的,本人的;拥有,有;承担;负责" },
+                { english: "bedroom", chinese: "卧室" },
+                { english: "mine", chinese: "我的;矿;矿井" },
+                { english: "hers", chinese: "她的" },
+                { english: "ours", chinese: "我们的" },
+                { english: "yard", chinese: "院子" },
+                { english: "theirs", chinese: "他们的,她们的,它们的" },
+                { english: "both", chinese: "两个,两个都" },
+                { english: "cut", chinese: "切,割;(用刀等将某物)切成,割成;削减,缩减" },
+                { english: "event", chinese: "大事;公开活动" },
+                { english: "website", chinese: "网站" },
+                { english: "nursing", chinese: "护理;看护" },
+                { english: "elder", chinese: "长者;长辈" },
+                { english: "lady", chinese: "女士,女子" },
+                { english: "better", chinese: "（good 的比较级）较好的;更好的" },
+                { english: "housing", chinese: "（统称）住房,住宅" },
+                { english: "transportation", chinese: "公共交通运输系统" },
+                { english: "nearby", chinese: "在附近;附近的" },
+                { english: "public", chinese: "公众的,大众的;公共的,公立的;民众;百姓(the public)" },
+                { english: "space", chinese: "大片空地;太空;空隙;空间" },
+                { english: "item", chinese: "项目;物件" },
+                { english: "farmer", chinese: "农场主;农人" },
+                { english: "farm", chinese: "农场;务农,饲养" },
+                { english: "drive", chinese: "驾车送(人);驾驶,开车" },
+                { english: "goods", chinese: "商品,货品;运载的货物" },
+                { english: "business", chinese: "商业;生意" },
+                { english: "early", chinese: "在早期;提前;早期的;早到的" }
+            ],
+            unit11: [
+                { english: "rule", chinese: "规则;规章;条例" },
+                { english: "traffic", chinese: "交通" },
+                { english: "respect", chinese: "尊敬;尊重" },
+                { english: "forget", chinese: "忘记做;忘记" },
+                { english: "board", chinese: "板;木板" },
+                { english: "polite", chinese: "有礼貌的" },
+                { english: "cause", chinese: "原因;起因;造成;引起;导致" },
+                { english: "effect", chinese: "结果;影响" },
+                { english: "wall", chinese: "墙,墙壁;城墙" },
+                { english: "hurt", chinese: "(使)疼痛,受伤" },
+                { english: "himself", chinese: "他自己" },
+                { english: "housework", chinese: "家务劳动;家务事" },
+                { english: "alone", chinese: "独自" },
+                { english: "peephole", chinese: "（墙或门上的）窥视孔" },
+                { english: "stranger", chinese: "陌生人" },
+                { english: "delivery", chinese: "递送;传送;交付" },
+                { english: "advantage", chinese: "优点" },
+                { english: "cross", chinese: "穿越;横过" },
+                { english: "guard", chinese: "警卫,看守" },
+                { english: "accident", chinese: "（交通）事故;意外" },
+                { english: "noise", chinese: "噪声" },
+                { english: "environment", chinese: "自然环境;生态环境" },
+                { english: "fair", chinese: "公正的;公道的" },
+                { english: "court", chinese: "球场;法院" },
+                { english: "dear", chinese: "亲爱的" },
+                { english: "since", chinese: "因为;既然" },
+                { english: "fight", chinese: "打架;打仗;努力争取;为……斗争；打架;比赛" },
+                { english: "mind", chinese: "头脑;大脑;心思；介意" },
+                { english: "herself", chinese: "她自己" },
+                { english: "French", chinese: "法语;法国人；法国的;法国人的;法语的" },
+                { english: "itself", chinese: "它自己(指施动并受其影响的动物或事物)" },
+                { english: "ourselves", chinese: "我们自己" },
+                { english: "break", chinese: "违犯,背弃;(使)破;弄坏;弄破;稍停；休息" },
+                { english: "head", chinese: "头;负责人；前往" },
+                { english: "slowly", chinese: "慢速地;缓慢地" },
+                { english: "speak", chinese: "说话;谈话" },
+                { english: "loudly", chinese: "吵闹地;嘈杂地" },
+                { english: "law", chinese: "法律;法规" },
+                { english: "advice", chinese: "劝告;建议" },
+                { english: "attention", chinese: "注意;专心" },
+                { english: "swimming pool", chinese: "游泳池;游泳馆" },
+                { english: "pool", chinese: "室内/室外游泳池;水塘,池塘" },
+                { english: "mess", chinese: "混乱;杂乱" },
+                { english: "angry", chinese: "愤怒的;生气的" },
+                { english: "loud", chinese: "大声的;喧闹的" },
+                { english: "promise", chinese: "承诺；诺言" },
+                { english: "mean", chinese: "表示……的意思；吝啬的;小气的" },
+                { english: "behavior", chinese: "行为;举止;态度" },
+                { english: "warning", chinese: "（就可能发生的意外等提出的）警告,警示;先兆" },
+                { english: "subway", chinese: "地铁" },
+                { english: "dollar", chinese: "元(美国、加拿大、澳大利亚等国的货币单位)" },
+                { english: "helmet", chinese: "头盔" },
+                { english: "rider", chinese: "骑手;骑马(或自行车、摩托车)的人" },
+                { english: "meeting", chinese: "会议;集会" },
+                { english: "manner", chinese: "礼仪;礼貌(复数)" },
+                { english: "seat", chinese: "座位" },
+                { english: "person", chinese: "人;个人" },
+                { english: "wrong", chinese: "错误的;有毛病的" },
+                { english: "plate", chinese: "盘子;碟子" },
+                { english: "chopstick", chinese: "筷子" },
+                { english: "point", chinese: "指,指向；论点;重点;点" }
+            ],
+            unit12: [
+                { english: "drama", chinese: "戏;剧" },
+                { english: "newspaper", chinese: "报纸" },
+                { english: "cheer", chinese: "欢呼,加油;鼓励" },
+                { english: "shoot", chinese: "射门,投篮;射击,发射" },
+                { english: "practice", chinese: "训练;练习" },
+                { english: "hole", chinese: "洞;孔;坑" },
+                { english: "kick", chinese: "踢;射门得分；踢" },
+                { english: "fail", chinese: "失败,未能(做到);不及格" },
+                { english: "true", chinese: "确实的;真正的" },
+                { english: "skill", chinese: "技巧;技能" },
+                { english: "teamwork", chinese: "团队合作" },
+                { english: "player", chinese: "运动员;游戏者;参赛选手" },
+                { english: "taxi", chinese: "出租汽车" },
+                { english: "paper-cut", chinese: "剪纸艺术" },
+                { english: "divide", chinese: "(使)分开,分散,分割,分成" },
+                { english: "become", chinese: "开始变得;成为" },
+                { english: "teammate", chinese: "队友" },
+                { english: "heart", chinese: "心;心脏" },
+                { english: "close", chinese: "亲密的;密切的；关;关闭" },
+                { english: "improve", chinese: "改进" },
+                { english: "hero", chinese: "英雄" },
+                { english: "engineer", chinese: "工程师;设计师" },
+                { english: "company", chinese: "公司" },
+                { english: "villager", chinese: "村民;乡村居民" },
+                { english: "tasty", chinese: "美味的;可口的" },
+                { english: "means", chinese: "方式;方法;途径" },
+                { english: "loss", chinese: "丧失;损失" },
+                { english: "taste", chinese: "味道;鉴赏力；有……味道;尝,品;吃,喝" },
+                { english: "difficulty", chinese: "困难;困境" },
+                { english: "voice", chinese: "说话声;嗓音" },
+                { english: "proudly", chinese: "自豪地;骄傲地" },
+                { english: "painting", chinese: "油画;画作" },
+                { english: "discuss", chinese: "讨论;谈论" },
+                { english: "writing", chinese: "书写;写作;笔迹" },
+                { english: "sound", chinese: "听起来好像；声音" },
+                { english: "soccer", chinese: "足球,足球运动" },
+                { english: "channel", chinese: "水道;航道" },
+                { english: "tunnel", chinese: "地下通道;隧道" },
+                { english: "difficult", chinese: "困难的" },
+                { english: "project", chinese: "项目；方案;专题研究" },
+                { english: "British", chinese: "英国的;英国人的" },
+                { english: "dream", chinese: "梦想;梦；做梦" },
+                { english: "chalk", chinese: "粉笔" },
+                { english: "copy", chinese: "复制;复印；复印件,副本" },
+                { english: "support", chinese: "支持" },
+                { english: "task", chinese: "任务,工作;活动" },
+                { english: "goal", chinese: "目标,目的;球门" },
+                { english: "face", chinese: "面临,必须对付(某情况)；面对,面向；脸" },
+                { english: "trust", chinese: "信任;信赖" },
+                { english: "hard - working", chinese: "工作努力的;辛勤的" },
+                { english: "lunch", chinese: "午餐;午饭" },
+                { english: "rainbow", chinese: "彩虹" },
+                { english: "mistake", chinese: "错误,失误；误解,误会" },
+                { english: "peace", chinese: "和平;平静" }
+            ]
+        };
 
-    <footer class="text-center py-6 bg-gray-800 text-white">
-        <p>&copy; 2025 Great Gamer. All Rights Reserved.</p>
-    </footer>
+        // 游戏状态
+        let gameState = {
+            currentUnit: null,
+            selectedCards: [],
+            matchedPairs: 0,
+            score: 0,
+            totalPairs: 0,
+            completedUnits: [],
+            currentBatch: 0,
+            remainingWords: [],
+            usedWords: []
+        };
 
+        // DOM元素
+        const unitSelect = document.getElementById('unit-select');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const gameBoard = document.getElementById('game-board');
+        const scoreDisplay = document.getElementById('score');
+        const remainingDisplay = document.getElementById('remaining');
+        const progressInfo = document.getElementById('progress-info');
+        const celebration = document.getElementById('celebration');
+        const celebrationScore = document.getElementById('celebration-score');
+        const continueBtn = document.getElementById('continue-btn');
+        const certificate = document.getElementById('certificate');
+        const playerName = document.getElementById('player-name');
+        
+        // 音效
+        const successSound = document.getElementById('success-sound');
+        const failSound = document.getElementById('fail-sound');
+        const celebrationSound = document.getElementById('celebration-sound');
+        const completeSound = document.getElementById('complete-sound');
+
+        // 初始化游戏
+        function initGame() {
+            gameState.currentUnit = unitSelect.value;
+            gameState.selectedCards = [];
+            gameState.matchedPairs = 0;
+            gameState.score = 0;
+            gameState.currentBatch = 0;
+            gameState.usedWords = [];
+            
+            // 获取当前单元的所有单词
+            if (gameState.currentUnit === 'all') {
+                // 从所有单元中随机选择单词
+                const allWords = Object.values(wordData).flat();
+                gameState.remainingWords = shuffleArray([...allWords]);
+            } else {
+                // 打乱当前单元的单词顺序
+                gameState.remainingWords = shuffleArray([...wordData[gameState.currentUnit]]);
+            }
+            
+            // 开始第一轮
+            startNextBatch();
+            
+            // 更新UI
+            scoreDisplay.textContent = gameState.score;
+            
+            // 启用重置按钮
+            resetBtn.disabled = false;
+        }
+
+        // 开始下一批单词
+        function startNextBatch() {
+            gameState.selectedCards = [];
+            gameState.matchedPairs = 0;
+            
+            // 从剩余单词中取10个（或剩余的全部）
+            const batchSize = Math.min(10, gameState.remainingWords.length);
+            const batchWords = gameState.remainingWords.splice(0, batchSize);
+            gameState.totalPairs = batchWords.length;
+            gameState.currentBatch++;
+            gameState.usedWords.push(...batchWords);
+            
+            // 更新进度信息
+            updateProgressInfo();
+            
+            // 创建卡片
+            createCards(batchWords);
+            
+            // 更新UI
+            remainingDisplay.textContent = gameState.totalPairs;
+        }
+
+        // 更新进度信息
+        function updateProgressInfo() {
+            if (gameState.currentUnit === 'all') {
+                progressInfo.textContent = `进度: ${gameState.usedWords.length} / ${Object.values(wordData).flat().length}`;
+            } else {
+                progressInfo.textContent = `进度: ${gameState.usedWords.length} / ${wordData[gameState.currentUnit].length} (第 ${gameState.currentBatch} 轮)`;
+            }
+        }
+
+        // 创建卡片
+        function createCards(words) {
+            gameBoard.innerHTML = '';
+            
+            // 创建英文和中文卡片
+            const cards = [];
+            words.forEach(word => {
+                cards.push({
+                    type: 'english',
+                    content: word.english,
+                    pair: word.chinese
+                });
+                cards.push({
+                    type: 'chinese',
+                    content: word.chinese,
+                    pair: word.english
+                });
+            });
+            
+            // 洗牌
+            const shuffledCards = shuffleArray(cards);
+            
+            // 添加到游戏板
+            shuffledCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.dataset.index = index;
+                cardElement.dataset.content = card.content;
+                cardElement.dataset.pair = card.pair;
+                cardElement.textContent = card.content;
+                
+                cardElement.addEventListener('click', handleCardClick);
+                
+                gameBoard.appendChild(cardElement);
+            });
+        }
+
+        // 处理卡片点击
+        function handleCardClick(event) {
+            const card = event.currentTarget;
+            
+            // 如果卡片已经匹配或已经选中，则忽略
+            if (card.classList.contains('matched') || card.classList.contains('selected')) {
+                return;
+            }
+            
+            // 如果已经选中了两张卡片，则忽略
+            if (gameState.selectedCards.length >= 2) {
+                return;
+            }
+            
+            // 选中卡片
+            card.classList.add('selected');
+            gameState.selectedCards.push(card);
+            
+            // 如果选中了两张卡片，检查是否匹配
+            if (gameState.selectedCards.length === 2) {
+                const card1 = gameState.selectedCards[0];
+                const card2 = gameState.selectedCards[1];
+                
+                // 检查是否匹配
+                if (card1.dataset.pair === card2.dataset.content && 
+                    card2.dataset.pair === card1.dataset.content) {
+                    // 匹配成功
+                    setTimeout(() => {
+                        card1.classList.add('matched');
+                        card2.classList.add('matched');
+                        gameState.selectedCards = [];
+                        gameState.matchedPairs++;
+                        gameState.score += 10;
+                        
+                        // 更新UI
+                        scoreDisplay.textContent = gameState.score;
+                        remainingDisplay.textContent = gameState.totalPairs - gameState.matchedPairs;
+                        
+                        // 播放成功音效
+                        successSound.currentTime = 0;
+                        successSound.play();
+                        
+                        // 检查是否完成本轮
+                        checkRoundCompletion();
+                    }, 500);
+                } else {
+                    // 匹配失败
+                    setTimeout(() => {
+                        card1.classList.remove('selected');
+                        card2.classList.remove('selected');
+                        gameState.selectedCards = [];
+                        
+                        // 播放失败音效
+                        failSound.currentTime = 0;
+                        failSound.play();
+                    }, 1000);
+                }
+            }
+        }
+
+        // 检查本轮是否完成
+        function checkRoundCompletion() {
+            if (gameState.matchedPairs === gameState.totalPairs) {
+                // 本轮完成
+                setTimeout(() => {
+                    // 检查是否还有剩余单词
+                    if (gameState.remainingWords.length > 0) {
+                        // 显示庆祝效果
+                        celebrationScore.textContent = gameState.score;
+                        celebration.classList.add('show');
+                        
+                        // 播放庆祝音效
+                        celebrationSound.currentTime = 0;
+                        celebrationSound.play();
+                        
+                        // 创建彩花效果
+                        createConfetti();
+                    } else {
+                        // 单元完成
+                        if (gameState.currentUnit !== 'all') {
+                            // 记录完成的单元
+                            if (!gameState.completedUnits.includes(gameState.currentUnit)) {
+                                gameState.completedUnits.push(gameState.currentUnit);
+                            }
+                            
+                            // 检查是否所有单元都完成了
+                            if (gameState.completedUnits.length === 6) {
+                                showCertificate();
+                                completeSound.currentTime = 0;
+                                completeSound.play();
+                            } else {
+                                // 显示单元完成庆祝
+                                celebrationScore.textContent = gameState.score;
+                                celebration.querySelector('h2').textContent = '恭喜完成单元!';
+                                celebration.classList.add('show');
+                                celebrationSound.currentTime = 0;
+                                celebrationSound.play();
+                                createConfetti();
+                            }
+                        } else {
+                            // 全部单词完成
+                            showCertificate();
+                            completeSound.currentTime = 0;
+                            completeSound.play();
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        // 创建彩花效果
+        function createConfetti() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                confetti.style.animationDelay = Math.random() * 5 + 's';
+                celebration.appendChild(confetti);
+                
+                // 移除彩花元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, 7000);
+            }
+        }
+
+        // 显示证书
+        function showCertificate() {
+            // 提示用户输入名字
+            const name = prompt('恭喜你完成了所有单词!请输入你的名字:', '单词达人');
+            playerName.textContent = name || '单词达人';
+            
+            certificate.classList.add('show');
+        }
+
+        // 数组洗牌函数
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 事件监听器
+        startBtn.addEventListener('click', initGame);
+        
+        resetBtn.addEventListener('click', () => {
+            initGame();
+        });
+        
+        continueBtn.addEventListener('click', () => {
+            celebration.classList.remove('show');
+            celebration.querySelector('h2').textContent = '恭喜完成本轮!';
+            
+            // 开始下一批单词
+            startNextBatch();
+        });
+
+        // 初始禁用重置按钮
+        resetBtn.disabled = true;
+    </script>
 </body>
 </html>
