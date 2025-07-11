@@ -143,6 +143,21 @@
         const celebrationSound = document.getElementById('celebration-sound');
         const completeSound = document.getElementById('complete-sound');
 
+        // 音频上下文
+        let audioContext;
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // 添加错误监听器
+        [clickSound, successSound, failSound, celebrationSound, completeSound].forEach(sound => {
+            sound.addEventListener('error', () => {
+                console.error('音频加载失败:', sound.src);
+            });
+        });
+
         // 初始化单元选择下拉菜单
         function initLessonSelect() {
             console.log('正在初始化单元选择...');
@@ -321,9 +336,12 @@
         // 处理卡片点击
         function handleCardClick(event) {
             const card = event.currentTarget;
-            
+
+            initAudioContext();
             clickSound.currentTime = 0;
-            clickSound.play();
+            clickSound.play().catch(error => {
+                console.error('点击音效播放失败:', error);
+            });
             
             if (card.classList.contains('matched') || card.classList.contains('selected')) {
                 return;
@@ -341,8 +359,11 @@
                 
                 if (card1.dataset.pair === card2.dataset.content && card2.dataset.pair === card1.dataset.content) {
                     setTimeout(() => {
+                        initAudioContext();
                         successSound.currentTime = 0;
-                        successSound.play();
+                        successSound.play().catch(error => {
+                            console.error('配对成功音效播放失败:', error);
+                        });
                         
                         card1.classList.add('matched');
                         card2.classList.add('matched');
@@ -356,8 +377,11 @@
                     }, 500);
                 } else {
                     setTimeout(() => {
+                        initAudioContext();
                         failSound.currentTime = 0;
-                        failSound.play();
+                        failSound.play().catch(error => {
+                            console.error('配对失败音效播放失败:', error);
+                        });
                         
                         card1.classList.remove('selected');
                         card2.classList.remove('selected');
@@ -371,17 +395,22 @@
         function checkRoundCompletion() {
             if (gameState.matchedPairs === gameState.totalPairs) {
                 setTimeout(() => {
+                    initAudioContext();
                     if (gameState.remainingWords.length > 0) {
                         celebrationScore.textContent = gameState.score;
                         celebration.classList.add('show');
                         celebrationSound.currentTime = 0;
-                        celebrationSound.play();
+                        celebrationSound.play().catch(error => {
+                            console.error('本轮完成音效播放失败:', error);
+                        });
                     } else {
                         celebrationScore.textContent = gameState.score;
                         celebration.querySelector('h2').textContent = '恭喜完成游戏!';
                         celebration.classList.add('show');
                         completeSound.currentTime = 0;
-                        completeSound.play();
+                        completeSound.play().catch(error => {
+                            console.error('游戏完成音效播放失败:', error);
+                        });
                     }
                 }, 1000);
             }
@@ -414,9 +443,16 @@
         }
 
         // 事件监听
-        startBtn.addEventListener('click', initGame);
-        resetBtn.addEventListener('click', initGame);
+        startBtn.addEventListener('click', () => {
+            initAudioContext();
+            initGame();
+        });
+        resetBtn.addEventListener('click', () => {
+            initAudioContext();
+            initGame();
+        });
         continueBtn.addEventListener('click', () => {
+            initAudioContext();
             celebration.classList.remove('show');
             celebration.querySelector('h2').textContent = '恭喜完成本轮!';
             startNextBatch();
