@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词连连看（八年级上册）</title>
+    <!-- 引入外部CSS文件 -->
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/game.css">
+    <!-- 保留必要的内联样式 -->
+    <style>
+        /* 仅保留必须的内联样式 */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        /* 无障碍样式 - 保留因为可能被JS依赖 */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* 新增：控制下拉菜单和按钮的布局 */
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .game-controls select, .game-controls button {
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .game-controls button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .game-controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container game-container">
+        <a href="../index.html" class="back-btn">返回首页</a>
+        <h1 class="game-title">单词连连看（八年级上册）</h1>
+        
+        <div id="loading-section">
+            <div class="loader"></div>
+            <p class="loading-text">正在加载单词库...</p>
+        </div>
+        
+        <div id="game-section" style="display: none;">
+            <div class="game-controls">
+                <label for="unit-select" class="sr-only">选择学习单元</label>
+                <select id="unit-select" aria-label="选择学习单元">
+                    <option value="all">全部单元</option>
+                    <!-- 单元选项将通过JS动态生成 -->
+                </select>
+
+                <label for="topic-select" class="sr-only">选择主题</label>
+                <select id="topic-select" aria-label="选择主题" disabled>
+                    <option value="all">全部主题</option>
+                    <!-- 主题选项将通过JS动态生成 -->
+                </select>
+
+                <button id="start-btn" class="btn btn-primary" disabled>开始游戏</button>
+                <button id="reset-btn" class="btn btn-primary" disabled>重新开始</button>
+            </div>
+            
+            <div class="progress-info" id="progress-info">请选择单元并开始游戏</div>
+            
+            <div class="game-info">
+                <div>得分: <span id="score">0</span></div>
+                <div>剩余配对: <span id="remaining">0</span></div>
+            </div>
+            
+            <div class="game-board" id="game-board"></div>
+            
+            <div class="celebration" id="celebration">
+                <h2>恭喜完成本轮!</h2>
+                <p>你的得分: <span id="celebration-score">0</span></p>
+                <button id="continue-btn" class="btn btn-primary">继续挑战</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音效元素 -->
+    <audio id="click-sound" src="../sounds/click.mp3" preload="auto"></audio>
+    <audio id="success-sound" src="../sounds/success.mp3" preload="auto"></audio>
+    <audio id="fail-sound" src="../sounds/fail.mp3" preload="auto"></audio>
+    <audio id="celebration-sound" src="../sounds/celebration.mp3" preload="auto"></audio>
+    <audio id="complete-sound" src="../sounds/complete.mp3" preload="auto"></audio>
+    
+    <!-- 加载八年级上册单词库 -->
+    <script src="../words/8a.js"></script>
+    
+    <!-- 游戏逻辑 -->
+    <script>
+        // 游戏状态
+        let gameState = {
+            currentUnit: null,
+            currentTopic: null,
+            selectedCards: [],
+            matchedPairs: 0,
+            score: 0,
+            totalPairs: 0,
+            currentBatch: 0,
+            remainingWords: [],
+            usedWords: []
+        };
+
+        // DOM元素
+        const loadingSection = document.getElementById('loading-section');
+        const gameSection = document.getElementById('game-section');
+        const unitSelect = document.getElementById('unit-select');
+        const topicSelect = document.getElementById('topic-select');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const gameBoard = document.getElementById('game-board');
+        const scoreDisplay = document.getElementById('score');
+        const remainingDisplay = document.getElementById('remaining');
+        const progressInfo = document.getElementById('progress-info');
+        const celebration = document.getElementById('celebration');
+        const celebrationScore = document.getElementById('celebration-score');
+        const continueBtn = document.getElementById('continue-btn');
+
+        // 音效元素
+        const clickSound = document.getElementById('click-sound');
+        const successSound = document.getElementById('success-sound');
+        const failSound = document.getElementById('fail-sound');
+        const celebrationSound = document.getElementById('celebration-sound');
+        const completeSound = document.getElementById('complete-sound');
+
+        // 初始化单元选择下拉菜单
+        function initUnitSelect() {
+            console.log('正在初始化单元选择...');
+            
+            // 确保wordData已加载且有效
+            if (!window.wordData || typeof window.wordData !== 'object' || Object.keys(window.wordData).length === 0) {
+                console.error('单词库未正确加载或为空');
+                progressInfo.textContent = "错误：单词库加载失败，请刷新页面";
+                return false;
+            }
+            
+            console.log('检测到有效的单词库:', window.wordData);
+            
+            // 清空现有选项（保留"全部单元"）
+            while (unitSelect.options.length > 1) {
+                unitSelect.remove(1);
+            }
+            
+            // 获取并排序单元（Unit 1-6）
+            const units = Object.keys(window.wordData)
+                .filter(key => key.startsWith('unit'))
+                .sort((a, b) => {
+                    const numA = parseInt(a.replace('unit', ''));
+                    const numB = parseInt(b.replace('unit', ''));
+                    return numA - numB;
+                });
+            
+            console.log('找到的单元:', units);
+            
+            if (units.length === 0) {
+                console.error('没有找到有效的单元数据');
+                progressInfo.textContent = "错误：单词库中没有有效单元";
+                return false;
+            }
+            
+            // 添加单元选项
+            units.forEach(unit => {
+                const option = document.createElement('option');
+                option.value = unit;
+                option.textContent = `Unit ${unit.replace('unit', '')}`;
+                unitSelect.appendChild(option);
+            });
+            
+            console.log('单元选择初始化完成，共', units.length, '个单元');
+            startBtn.disabled = false;
+            return true;
+        }
+
+        // 初始化主题选择下拉菜单
+        function initTopicSelect(unit) {
+            console.log('正在初始化主题选择...');
+            topicSelect.innerHTML = '<option value="all">全部主题</option>';
+            
+            if (unit === 'all') {
+                topicSelect.disabled = true;
+                return;
+            }
+
+            const unitData = window.wordData[unit];
+            if (!unitData) {
+                console.error('未找到单元数据:', unit);
+                topicSelect.disabled = true;
+                return;
+            }
+
+            const topics = Object.keys(unitData);
+            topics.forEach(topic => {
+                const option = document.createElement('option');
+                option.value = topic;
+                option.textContent = topic.charAt(0).toUpperCase() + topic.slice(1); // 首字母大写
+                topicSelect.appendChild(option);
+            });
+
+            topicSelect.disabled = false;
+            console.log('主题选择初始化完成，共', topics.length, '个主题');
+        }
+
+        // 初始化游戏
+        function initGame() {
+            console.log('正在初始化游戏...');
+            
+            if (!window.wordData || typeof window.wordData !== 'object' || Object.keys(window.wordData).length === 0) {
+                alert("单词库加载失败，请检查words.js文件并刷新页面");
+                return;
+            }
+            
+            const unit = unitSelect.value;
+            const topic = topicSelect.value;
+            
+            gameState.currentUnit = unit;
+            gameState.currentTopic = topic;
+            gameState.selectedCards = [];
+            gameState.matchedPairs = 0;
+            gameState.score = 0;
+            gameState.currentBatch = 0;
+            gameState.usedWords = [];
+            
+            // 获取所有单词
+            let allWords = [];
+            if (unit === 'all') {
+                // 从所有单元获取单词
+                Object.values(window.wordData).forEach(unit => {
+                    Object.values(unit).forEach(topic => {
+                        allWords = allWords.concat(topic);
+                    });
+                });
+            } else {
+                const unitWords = window.wordData[unit];
+                if (topic === 'all') {
+                    // 从指定单元的所有主题获取单词
+                    Object.values(unitWords).forEach(topic => {
+                        allWords = allWords.concat(topic);
+                    });
+                } else {
+                    // 从指定单元和主题获取单词
+                    allWords = unitWords[topic] || [];
+                }
+            }
+            
+            console.log('获取到的单词数量:', allWords.length);
+            
+            if (allWords.length === 0) {
+                alert('未找到任何单词，请检查单词库');
+                return;
+            }
+            
+            // 打乱单词顺序
+            gameState.remainingWords = shuffleArray([...allWords]);
+            
+            // 开始第一轮
+            startNextBatch();
+            
+            // 更新UI
+            scoreDisplay.textContent = gameState.score;
+            resetBtn.disabled = false;
+        }
+
+        // 开始下一批单词
+        function startNextBatch() {
+            gameState.selectedCards = [];
+            gameState.matchedPairs = 0;
+            
+            // 每次显示6个单词（6对）
+            const batchSize = Math.min(6, gameState.remainingWords.length);
+            const batchWords = gameState.remainingWords.splice(0, batchSize);
+            gameState.totalPairs = batchWords.length;
+            gameState.currentBatch++;
+            gameState.usedWords = [...gameState.usedWords, ...batchWords];
+            
+            console.log('当前批次的单词:', batchWords);
+            
+            if (batchWords.length === 0) {
+                console.error('没有可用的单词');
+                return;
+            }
+            
+            // 更新进度
+            updateProgressInfo();
+            
+            // 创建卡片
+            createCards(batchWords);
+            
+            // 更新剩余配对数
+            remainingDisplay.textContent = gameState.totalPairs;
+        }
+
+        // 创建卡片
+        function createCards(words) {
+            gameBoard.innerHTML = '';
+            
+            // 创建卡片对
+            const cards = [];
+            words.forEach(word => {
+                // 确保word是对象且有english和chinese属性
+                if (word && word.english && word.chinese) {
+                    cards.push({
+                        type: 'english',
+                        content: word.english,
+                        pair: word.chinese
+                    });
+                    cards.push({
+                        type: 'chinese',
+                        content: word.chinese,
+                        pair: word.english
+                    });
+                } else {
+                    console.warn('无效的单词对象:', word);
+                }
+            });
+            
+            console.log('创建的卡片:', cards);
+            
+            if (cards.length === 0) {
+                console.error('没有可用的卡片');
+                return;
+            }
+            
+            // 洗牌
+            const shuffledCards = shuffleArray(cards);
+            
+            // 添加到游戏板
+            shuffledCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.dataset.index = index;
+                cardElement.dataset.content = card.content;
+                cardElement.dataset.pair = card.pair;
+                cardElement.textContent = card.content;
+                
+                cardElement.addEventListener('click', handleCardClick);
+                
+                gameBoard.appendChild(cardElement);
+            });
+        }
+
+        // 处理卡片点击
+        function handleCardClick(event) {
+            const card = event.currentTarget;
+            
+            // 播放点击音效
+            clickSound.currentTime = 0;
+            clickSound.play();
+            
+            // 忽略已匹配或已选中的卡片
+            if (card.classList.contains('matched') || card.classList.contains('selected')) {
+                return;
+            }
+            
+            // 忽略当已选中两张卡片时
+            if (gameState.selectedCards.length >= 2) {
+                return;
+            }
+            
+            // 选中卡片
+            card.classList.add('selected');
+            gameState.selectedCards.push(card);
+            
+            // 检查是否匹配
+            if (gameState.selectedCards.length === 2) {
+                const [card1, card2] = gameState.selectedCards;
+                
+                if (card1.dataset.pair === card2.dataset.content && 
+                    card2.dataset.pair === card1.dataset.content) {
+                    // 匹配成功
+                    setTimeout(() => {
+                        // 播放成功音效
+                        successSound.currentTime = 0;
+                        successSound.play();
+                        
+                        card1.classList.add('matched');
+                        card2.classList.add('matched');
+                        gameState.selectedCards = [];
+                        gameState.matchedPairs++;
+                        gameState.score += 10;
+                        
+                        // 更新UI
+                        scoreDisplay.textContent = gameState.score;
+                        remainingDisplay.textContent = gameState.totalPairs - gameState.matchedPairs;
+                        
+                        // 检查是否完成本轮
+                        checkRoundCompletion();
+                    }, 500);
+                } else {
+                    // 匹配失败
+                    setTimeout(() => {
+                        // 播放失败音效
+                        failSound.currentTime = 0;
+                        failSound.play();
+                        
+                        card1.classList.remove('selected');
+                        card2.classList.remove('selected');
+                        gameState.selectedCards = [];
+                    }, 1000);
+                }
+            }
+        }
+
+        // 检查本轮是否完成
+        function checkRoundCompletion() {
+            if (gameState.matchedPairs === gameState.totalPairs) {
+                setTimeout(() => {
+                    if (gameState.remainingWords.length > 0) {
+                        // 显示庆祝效果并播放音效
+                        celebrationScore.textContent = gameState.score;
+                        celebration.classList.add('show');
+                        celebrationSound.currentTime = 0;
+                        celebrationSound.play();
+                    } else {
+                        // 游戏完成
+                        celebrationScore.textContent = gameState.score;
+                        celebration.querySelector('h2').textContent = '恭喜完成游戏!';
+                        celebration.classList.add('show');
+                        completeSound.currentTime = 0;
+                        completeSound.play();
+                    }
+                }, 1000);
+            }
+        }
+
+        // 更新进度信息
+        function updateProgressInfo() {
+            let progressText = '';
+            if (gameState.currentUnit === 'all') {
+                const totalWords = Object.values(window.wordData).reduce((total, unit) => {
+                    return total + Object.values(unit).reduce((sum, topic) => sum + topic.length, 0);
+                }, 0);
+                progressText = `进度: ${gameState.usedWords.length}/${totalWords}`;
+            } else {
+                const unitWords = window.wordData[gameState.currentUnit];
+                if (gameState.currentTopic === 'all') {
+                    const totalWords = Object.values(unitWords).reduce((sum, topic) => sum + topic.length, 0);
+                    progressText = `进度: ${gameState.usedWords.length}/${totalWords} (第 ${gameState.currentBatch} 轮)`;
+                } else {
+                    const totalWords = unitWords[gameState.currentTopic].length;
+                    progressText = `进度: ${gameState.usedWords.length}/${totalWords} (第 ${gameState.currentBatch} 轮)`;
+                }
+            }
+            progressInfo.textContent = progressText;
+        }
+
+        // 数组洗牌函数
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 事件监听
+        startBtn.addEventListener('click', initGame);
+        resetBtn.addEventListener('click', initGame);
+        continueBtn.addEventListener('click', () => {
+            celebration.classList.remove('show');
+            celebration.querySelector('h2').textContent = '恭喜完成本轮!';
+            startNextBatch();
+        });
+
+        // 监听unit选择变化，动态加载topic
+        unitSelect.addEventListener('change', function() {
+            initTopicSelect(this.value);
+        });
+
+        // 初始化 - 确保DOM和words.js都加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM已加载完成');
+            
+            // 检查wordData是否已加载
+            function checkWordDataLoaded() {
+                if (typeof window.wordData !== 'undefined' && 
+                    typeof window.wordData === 'object' && 
+                    Object.keys(window.wordData).length > 0) {
+                    console.log('wordData已加载:', window.wordData);
+                    
+                    // 隐藏加载指示器，显示游戏界面
+                    loadingSection.style.display = 'none';
+                    gameSection.style.display = 'block';
+                    
+                    // 初始化单元选择
+                    if (initUnitSelect()) {
+                        console.log('游戏初始化成功');
+                    } else {
+                        console.error('游戏初始化失败');
+                    }
+                    
+                    return true;
+                } else {
+                    console.log('等待wordData加载...');
+                    setTimeout(checkWordDataLoaded, 100);
+                    return false;
+                }
+            }
+            
+            // 设置超时检查（10秒后如果仍未加载则报错）
+            const timeout = setTimeout(() => {
+                if (typeof window.wordData === 'undefined') {
+                    console.error('单词库加载超时');
+                    loadingSection.innerHTML = '<p class="loading-text" style="color: red;">单词库加载超时，请检查网络连接并刷新页面</p>';
+                }
+            }, 10000);
+            
+            // 开始检查
+            checkWordDataLoaded().then(() => {
+                clearTimeout(timeout);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+/* css/game.css - 所有游戏页面共享样式 */
+
+/* 游戏容器 */
+.game-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* 游戏标题 */
+.game-title {
+    text-align: center;
+    color: #4a6baf;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 返回按钮 */
+.back-btn {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 15px;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+}
+
+/* 游戏控制区 */
+.game-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* 游戏信息显示 */
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.progress-info {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: #4a6baf;
+}
+
+/* 游戏板 */
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* 卡片样式 */
+.card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card.selected {
+    background-color: #e1f5fe;
+    border: 2px solid #4a6baf;
+}
+
+.card.matched {
+    visibility: hidden;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.5s;
+}
+
+/* 庆祝效果 */
+.celebration {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    color: white;
+    font-size: 2rem;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+}
+
+.celebration.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.celebration h2 {
+    margin-bottom: 20px;
+    color: #ffcc00;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+}
+
+/* 加载指示器 */
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #4a6baf;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+.loading-text {
+    text-align: center;
+    color: #4a6baf;
+    font-size: 1.2rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .game-board {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    
+    .game-title {
+        font-size: 2rem;
+    }
+}
