@@ -1,277 +1,273 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>单词连连看（三年级上册）</title>
-    <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/game.css">
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            font-family: 'Arial', sans-serif;
-        }
-        .game-controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
-        }
-        .game-controls select, .game-controls button {
-            padding: 8px 12px;
-            font-size: 14px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        .game-controls button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>单词连连看（三年级上册）</title>
+  <link rel="stylesheet" href="../css/common.css" />
+  <link rel="stylesheet" href="../css/game.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Arial', sans-serif;
+    }
+    .game-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    .game-controls select, .game-controls button {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .game-controls button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <div class="container game-container">
-        <a href="../index.html" class="back-btn">返回首页</a>
-        <h1 class="game-title">单词连连看（三年级上册）</h1>
-        <div id="loading-section"><p class="loading-text">正在加载单词库...</p></div>
-        <div id="game-section" style="display: none;">
-            <div class="game-controls">
-                <select id="lesson-select"><option value="all">全部单元</option></select>
-                <button id="start-btn" disabled>开始游戏</button>
-                <button id="reset-btn" disabled>重新开始</button>
-            </div>
-            <div id="progress-info">请选择单元并开始游戏</div>
-            <div class="game-info">
-                <div>得分: <span id="score">0</span></div>
-                <div>剩余配对: <span id="remaining">0</span></div>
-            </div>
-            <div class="game-board" id="game-board"></div>
-            <div class="celebration" id="celebration">
-                <h2>恭喜完成本轮!</h2>
-                <p>你的得分: <span id="celebration-score">0</span></p>
-                <button id="continue-btn">继续挑战</button>
-            </div>
-        </div>
+  <div class="container game-container">
+    <a href="../index.html">返回首页</a>
+    <h1>单词连连看（三年级上册）</h1>
+
+    <div id="loading-section"><p>正在加载单词库...</p></div>
+
+    <div id="game-section" style="display: none;">
+      <div class="game-controls">
+        <select id="lesson-select">
+          <option value="all">全部单元</option>
+        </select>
+        <button id="start-btn" disabled>开始游戏</button>
+        <button id="reset-btn" disabled>重新开始</button>
+      </div>
+
+      <div id="progress-info">请选择单元并开始游戏</div>
+      <div class="game-info">
+        <div>得分: <span id="score">0</span></div>
+        <div>剩余配对: <span id="remaining">0</span></div>
+      </div>
+      <div id="game-board"></div>
+
+      <div id="celebration" class="celebration">
+        <h2>恭喜完成本轮!</h2>
+        <p>你的得分: <span id="celebration-score">0</span></p>
+        <button id="continue-btn">继续挑战</button>
+      </div>
     </div>
+  </div>
 
-    <!-- ✅ 音效路径使用 ./ 适配 GitHub Pages -->
-    <audio id="click-sound" src="./sounds/click.mp3" preload="auto"></audio>
-    <audio id="success-sound" src="./sounds/success.mp3" preload="auto"></audio>
-    <audio id="fail-sound" src="./sounds/fail.mp3" preload="auto"></audio>
-    <audio id="celebration-sound" src="./sounds/celebration.mp3" preload="auto"></audio>
-    <audio id="complete-sound" src="./sounds/complete.mp3" preload="auto"></audio>
+  <!-- ✅ 修正路径：返回上一级找到 sounds 目录 -->
+  <audio id="click-sound" src="../sounds/click.mp3" preload="auto"></audio>
+  <audio id="success-sound" src="../sounds/success.mp3" preload="auto"></audio>
+  <audio id="fail-sound" src="../sounds/fail.mp3" preload="auto"></audio>
+  <audio id="celebration-sound" src="../sounds/celebration.mp3" preload="auto"></audio>
+  <audio id="complete-sound" src="../sounds/complete.mp3" preload="auto"></audio>
 
-    <!-- 引入单词库 -->
-    <script src="../words/3a.js"></script>
-
-    <script>
-    // ✅ DOM元素定义
+  <script src="../words/3a.js"></script>
+  <script>
+    // ✅ 音效对象
     const clickSound = document.getElementById('click-sound');
     const successSound = document.getElementById('success-sound');
     const failSound = document.getElementById('fail-sound');
     const celebrationSound = document.getElementById('celebration-sound');
     const completeSound = document.getElementById('complete-sound');
 
-    const gameBoard = document.getElementById('game-board');
+    // ✅ 解锁机制：首次点击尝试播放音效
+    let audioUnlocked = false;
+    document.body.addEventListener('click', () => {
+      if (audioUnlocked) return;
+      safePlay(clickSound);
+      audioUnlocked = true;
+    }, { once: true });
+
+    // ✅ 安全播放函数，避免播放失败
+    function safePlay(audio) {
+      if (!audio) return;
+      audio.currentTime = 0;
+      if (audio.readyState >= 2) {
+        audio.play().catch(e => console.warn("播放失败：", e));
+      } else {
+        audio.addEventListener('canplaythrough', () => {
+          audio.play().catch(e => console.warn("播放失败：", e));
+        }, { once: true });
+      }
+    }
+
+    const gameState = {
+      selectedCards: [],
+      score: 0,
+      matchedPairs: 0,
+      totalPairs: 0,
+      remainingWords: [],
+      usedWords: [],
+      currentLesson: null
+    };
+
     const lessonSelect = document.getElementById('lesson-select');
     const startBtn = document.getElementById('start-btn');
     const resetBtn = document.getElementById('reset-btn');
+    const gameBoard = document.getElementById('game-board');
     const scoreDisplay = document.getElementById('score');
     const remainingDisplay = document.getElementById('remaining');
+    const progressInfo = document.getElementById('progress-info');
     const celebration = document.getElementById('celebration');
     const celebrationScore = document.getElementById('celebration-score');
     const continueBtn = document.getElementById('continue-btn');
     const loadingSection = document.getElementById('loading-section');
     const gameSection = document.getElementById('game-section');
-    const progressInfo = document.getElementById('progress-info');
 
-    // ✅ 解锁机制，确保音频可以被播放
-    let audioUnlocked = false;
-    document.body.addEventListener('click', () => {
-        if (audioUnlocked) return;
-        [clickSound, successSound, failSound, celebrationSound, completeSound].forEach(sound => {
-            sound.muted = true;
-            sound.play().then(() => {
-                sound.pause();
-                sound.muted = false;
-            }).catch(() => {});
-        });
-        audioUnlocked = true;
-    }, { once: true });
-
-    // ✅ 安全播放函数
-    function safePlay(sound) {
-        if (!sound) return;
-        sound.currentTime = 0;
-        if (sound.readyState >= 2) {
-            sound.play().catch(e => console.warn("播放失败：", e));
-        } else {
-            sound.addEventListener('canplaythrough', () => {
-                sound.play().catch(e => console.warn("播放失败：", e));
-            }, { once: true });
-        }
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
     }
 
-    const gameState = {
-        selectedCards: [],
-        score: 0,
-        matchedPairs: 0,
-        totalPairs: 0,
-        remainingWords: [],
-        usedWords: [],
-        currentLesson: null
-    };
-
     function initLessonSelect() {
-        const lessons = Object.keys(window.wordData).filter(key => key.startsWith("unit"));
-        lessons.sort((a, b) => parseInt(a.replace("unit", "")) - parseInt(b.replace("unit", "")));
-        lessons.forEach(key => {
-            const opt = document.createElement("option");
-            opt.value = key;
-            opt.textContent = "Unit " + key.replace("unit", "");
-            lessonSelect.appendChild(opt);
-        });
-        startBtn.disabled = false;
+      const lessons = Object.keys(window.wordData || {}).filter(k => k.startsWith('unit'));
+      lessons.sort((a, b) => parseInt(a.replace('unit', '')) - parseInt(b.replace('unit', '')));
+      lessons.forEach(unit => {
+        const opt = document.createElement('option');
+        opt.value = unit;
+        opt.textContent = 'Unit ' + unit.replace('unit', '');
+        lessonSelect.appendChild(opt);
+      });
+      startBtn.disabled = false;
     }
 
     function initGame() {
-        const lesson = lessonSelect.value;
-        gameState.currentLesson = lesson;
-        gameState.selectedCards = [];
-        gameState.matchedPairs = 0;
-        gameState.score = 0;
-        gameState.usedWords = [];
-        gameState.remainingWords = [];
+      const lesson = lessonSelect.value;
+      gameState.currentLesson = lesson;
+      gameState.selectedCards = [];
+      gameState.score = 0;
+      gameState.matchedPairs = 0;
+      gameState.remainingWords = [];
+      gameState.usedWords = [];
 
-        let words = [];
-        if (lesson === 'all') {
-            Object.values(wordData).forEach(unit => words.push(...unit));
-        } else {
-            words = wordData[lesson];
-        }
+      let allWords = [];
+      if (lesson === 'all') {
+        Object.values(wordData).forEach(unit => allWords.push(...unit));
+      } else {
+        allWords = wordData[lesson] || [];
+      }
 
-        gameState.remainingWords = shuffleArray(words);
-        scoreDisplay.textContent = "0";
-        startNextBatch();
-        resetBtn.disabled = false;
+      gameState.remainingWords = shuffleArray(allWords);
+      scoreDisplay.textContent = "0";
+      startNextBatch();
+      resetBtn.disabled = false;
     }
 
     function startNextBatch() {
-        const batch = gameState.remainingWords.splice(0, 6);
-        gameState.totalPairs = batch.length;
-        gameState.matchedPairs = 0;
-        gameState.selectedCards = [];
-        gameState.usedWords.push(...batch);
-        remainingDisplay.textContent = gameState.totalPairs;
-        updateProgressInfo();
-        createCards(batch);
+      const batch = gameState.remainingWords.splice(0, 6);
+      gameState.totalPairs = batch.length;
+      gameState.matchedPairs = 0;
+      gameState.selectedCards = [];
+      gameState.usedWords.push(...batch);
+      remainingDisplay.textContent = gameState.totalPairs;
+      updateProgressInfo();
+      createCards(batch);
     }
 
     function createCards(words) {
-        gameBoard.innerHTML = '';
-        const cards = [];
-        words.forEach(w => {
-            cards.push({type: 'en', content: w.english, pair: w.chinese});
-            cards.push({type: 'zh', content: w.chinese, pair: w.english});
-        });
-        shuffleArray(cards).forEach((card, idx) => {
-            const el = document.createElement('div');
-            el.className = 'card';
-            el.textContent = card.content;
-            el.dataset.content = card.content;
-            el.dataset.pair = card.pair;
-            el.addEventListener('click', handleCardClick);
-            gameBoard.appendChild(el);
-        });
+      gameBoard.innerHTML = '';
+      const cards = [];
+      words.forEach(w => {
+        cards.push({type: 'en', content: w.english, pair: w.chinese});
+        cards.push({type: 'zh', content: w.chinese, pair: w.english});
+      });
+      shuffleArray(cards).forEach((card, i) => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.textContent = card.content;
+        el.dataset.content = card.content;
+        el.dataset.pair = card.pair;
+        el.addEventListener('click', handleCardClick);
+        gameBoard.appendChild(el);
+      });
     }
 
     function handleCardClick(e) {
-        const card = e.currentTarget;
-        safePlay(clickSound);
-        if (card.classList.contains('matched') || card.classList.contains('selected')) return;
-        if (gameState.selectedCards.length >= 2) return;
+      const card = e.currentTarget;
+      if (!audioUnlocked) return;
+      safePlay(clickSound);
 
-        card.classList.add('selected');
-        gameState.selectedCards.push(card);
+      if (card.classList.contains('matched') || card.classList.contains('selected')) return;
+      if (gameState.selectedCards.length >= 2) return;
 
-        if (gameState.selectedCards.length === 2) {
-            const [a, b] = gameState.selectedCards;
-            if (a.dataset.pair === b.dataset.content && b.dataset.pair === a.dataset.content) {
-                setTimeout(() => {
-                    a.classList.add('matched');
-                    b.classList.add('matched');
-                    gameState.matchedPairs++;
-                    gameState.score += 10;
-                    scoreDisplay.textContent = gameState.score;
-                    remainingDisplay.textContent = gameState.totalPairs - gameState.matchedPairs;
-                    gameState.selectedCards = [];
-                    safePlay(successSound);
-                    if (gameState.matchedPairs === gameState.totalPairs) {
-                        endRound();
-                    }
-                }, 400);
-            } else {
-                setTimeout(() => {
-                    a.classList.remove('selected');
-                    b.classList.remove('selected');
-                    gameState.selectedCards = [];
-                    safePlay(failSound);
-                }, 800);
-            }
+      card.classList.add('selected');
+      gameState.selectedCards.push(card);
+
+      if (gameState.selectedCards.length === 2) {
+        const [a, b] = gameState.selectedCards;
+        if (a.dataset.pair === b.dataset.content && b.dataset.pair === a.dataset.content) {
+          setTimeout(() => {
+            a.classList.add('matched');
+            b.classList.add('matched');
+            gameState.matchedPairs++;
+            gameState.score += 10;
+            scoreDisplay.textContent = gameState.score;
+            remainingDisplay.textContent = gameState.totalPairs - gameState.matchedPairs;
+            gameState.selectedCards = [];
+            safePlay(successSound);
+            if (gameState.matchedPairs === gameState.totalPairs) endRound();
+          }, 400);
+        } else {
+          setTimeout(() => {
+            a.classList.remove('selected');
+            b.classList.remove('selected');
+            gameState.selectedCards = [];
+            safePlay(failSound);
+          }, 800);
         }
+      }
     }
 
     function endRound() {
-        setTimeout(() => {
-            celebrationScore.textContent = gameState.score;
-            celebration.classList.add('show');
-            if (gameState.remainingWords.length > 0) {
-                safePlay(celebrationSound);
-            } else {
-                celebration.querySelector('h2').textContent = '恭喜完成游戏!';
-                safePlay(completeSound);
-            }
-        }, 800);
-    }
-
-    function shuffleArray(arr) {
-        for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
+      setTimeout(() => {
+        celebrationScore.textContent = gameState.score;
+        celebration.classList.add('show');
+        if (gameState.remainingWords.length > 0) {
+          safePlay(celebrationSound);
+        } else {
+          celebration.querySelector('h2').textContent = '恭喜完成游戏!';
+          safePlay(completeSound);
         }
-        return arr;
+      }, 800);
     }
 
     function updateProgressInfo() {
-        const total = gameState.currentLesson === 'all'
-            ? Object.values(wordData).reduce((sum, unit) => sum + unit.length, 0)
-            : wordData[gameState.currentLesson].length;
-        progressInfo.textContent = `进度: ${gameState.usedWords.length}/${total}`;
+      const total = gameState.currentLesson === 'all'
+        ? Object.values(wordData).reduce((sum, unit) => sum + unit.length, 0)
+        : wordData[gameState.currentLesson].length;
+      progressInfo.textContent = `进度: ${gameState.usedWords.length}/${total}`;
     }
 
-    // 初始化
     startBtn.addEventListener('click', initGame);
     resetBtn.addEventListener('click', initGame);
     continueBtn.addEventListener('click', () => {
-        celebration.classList.remove('show');
-        celebration.querySelector('h2').textContent = '恭喜完成本轮!';
-        startNextBatch();
+      celebration.classList.remove('show');
+      celebration.querySelector('h2').textContent = '恭喜完成本轮!';
+      startNextBatch();
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-        if (window.wordData) {
-            initLessonSelect();
-            loadingSection.style.display = 'none';
-            gameSection.style.display = 'block';
-        } else {
-            loadingSection.innerHTML = '<p style="color:red;">单词库加载失败</p>';
-        }
+      if (window.wordData) {
+        initLessonSelect();
+        loadingSection.style.display = 'none';
+        gameSection.style.display = 'block';
+      } else {
+        loadingSection.innerHTML = '<p style="color:red;">单词库加载失败</p>';
+      }
     });
-    </script>
+  </script>
 </body>
 </html>
