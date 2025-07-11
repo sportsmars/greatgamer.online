@@ -57,31 +57,6 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
-
-        /* 新增音频状态提示样式 */
-        #audio-status {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 1000;
-        }
-        
-        .audio-loading {
-            color: #ff9800;
-        }
-        
-        .audio-ready {
-            color: #4caf50;
-        }
-        
-        .audio-error {
-            color: #f44336;
-        }
     </style>
 </head>
 <body>
@@ -123,9 +98,6 @@
         </div>
     </div>
 
-    <!-- 音频状态提示 -->
-    <div id="audio-status" class="audio-loading">音效加载中...</div>
-
     <!-- 音效元素 -->
     <audio id="click-sound" src="../sounds/click.mp3" preload="auto"></audio>
     <audio id="success-sound" src="../sounds/success.mp3" preload="auto"></audio>
@@ -138,92 +110,6 @@
     
     <!-- 游戏逻辑 -->
     <script>
-        // 音频上下文
-        const audioContext = {
-            elements: {},
-            enabled: false,
-            loaded: false,
-            statusElement: document.getElementById('audio-status')
-        };
-
-        // 初始化音频系统
-        function initAudio() {
-            const enableAudio = () => {
-                if (!audioContext.enabled) {
-                    audioContext.enabled = true;
-                    audioContext.statusElement.textContent = "音效已激活";
-                    audioContext.statusElement.className = "audio-ready";
-                    
-                    try {
-                        const silentAudio = new Audio();
-                        silentAudio.volume = 0;
-                        silentAudio.play().then(() => {
-                            console.log("音频上下文已激活");
-                        });
-                    } catch (e) {
-                        console.log("音频激活尝试失败:", e);
-                    }
-                }
-            };
-            
-            document.addEventListener('click', enableAudio, { once: true });
-            document.addEventListener('touchstart', enableAudio, { once: true });
-            
-            const audioFiles = [
-                { id: 'click-sound', file: 'click.mp3' },
-                { id: 'success-sound', file: 'success.mp3' },
-                { id: 'fail-sound', file: 'fail.mp3' },
-                { id: 'celebration-sound', file: 'celebration.mp3' },
-                { id: 'complete-sound', file: 'complete.mp3' }
-            ];
-            
-            let loadedCount = 0;
-            
-            audioFiles.forEach(item => {
-                const audio = document.getElementById(item.id);
-                audio.preload = 'auto';
-                
-                audio.addEventListener('canplaythrough', () => {
-                    loadedCount++;
-                    audioContext.elements[item.id] = audio;
-                    
-                    if (loadedCount === audioFiles.length) {
-                        audioContext.loaded = true;
-                        audioContext.statusElement.textContent = "音效加载完成 - 点击页面激活";
-                        audioContext.statusElement.className = "audio-ready";
-                    }
-                });
-                
-                audio.addEventListener('error', () => {
-                    console.error(`加载音效失败: ${item.file}`);
-                    audioContext.statusElement.textContent = `加载音效失败: ${item.file}`;
-                    audioContext.statusElement.className = "audio-error";
-                });
-            });
-        }
-
-        // 安全的音频播放函数
-        function playSound(audioElement) {
-            if (!audioContext.enabled || !audioContext.loaded) {
-                console.log('音频未激活或未加载完成');
-                return;
-            }
-            
-            try {
-                audioElement.currentTime = 0;
-                audioElement.play().catch(e => {
-                    console.error('播放音频失败:', e);
-                    if (e.name === 'NotAllowedError') {
-                        audioContext.enabled = false;
-                        audioContext.statusElement.textContent = "请点击页面激活音效";
-                        audioContext.statusElement.className = "audio-loading";
-                    }
-                });
-            } catch (e) {
-                console.error('音频播放错误:', e);
-            }
-        }
-
         // 游戏状态
         let gameState = {
             currentLesson: null,
@@ -436,7 +322,8 @@
         function handleCardClick(event) {
             const card = event.currentTarget;
             
-            playSound(clickSound);
+            clickSound.currentTime = 0;
+            clickSound.play();
             
             if (card.classList.contains('matched') || card.classList.contains('selected')) {
                 return;
@@ -454,7 +341,8 @@
                 
                 if (card1.dataset.pair === card2.dataset.content && card2.dataset.pair === card1.dataset.content) {
                     setTimeout(() => {
-                        playSound(successSound);
+                        successSound.currentTime = 0;
+                        successSound.play();
                         
                         card1.classList.add('matched');
                         card2.classList.add('matched');
@@ -468,7 +356,8 @@
                     }, 500);
                 } else {
                     setTimeout(() => {
-                        playSound(failSound);
+                        failSound.currentTime = 0;
+                        failSound.play();
                         
                         card1.classList.remove('selected');
                         card2.classList.remove('selected');
@@ -485,12 +374,14 @@
                     if (gameState.remainingWords.length > 0) {
                         celebrationScore.textContent = gameState.score;
                         celebration.classList.add('show');
-                        playSound(celebrationSound);
+                        celebrationSound.currentTime = 0;
+                        celebrationSound.play();
                     } else {
                         celebrationScore.textContent = gameState.score;
                         celebration.querySelector('h2').textContent = '恭喜完成游戏!';
                         celebration.classList.add('show');
-                        playSound(completeSound);
+                        completeSound.currentTime = 0;
+                        completeSound.play();
                     }
                 }, 1000);
             }
@@ -530,55 +421,43 @@
             celebration.querySelector('h2').textContent = '恭喜完成本轮!';
             startNextBatch();
         });
+
         // 初始化 - 确保DOM和words.js都加载完成
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM已加载完成');
-        
-        // 初始化音频系统
-        initAudio();
-        
-        function checkWordDataLoaded() {
-            return new Promise((resolve) => {
-                const check = () => {
-                    if (typeof window.wordData !== 'undefined' && 
-                        typeof window.wordData === 'object' && 
-                        Object.keys(window.wordData).length > 0) {
-                        console.log('wordData已加载:', window.wordData);
-                        
-                        loadingSection.style.display = 'none';
-                        gameSection.style.display = 'block';
-                        
-                        if (initLessonSelect()) {
-                            console.log('游戏初始化成功');
-                            resolve(true);
-                        } else {
-                            console.error('游戏初始化失败');
-                            resolve(false);
-                        }
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM已加载完成');
+            
+            function checkWordDataLoaded() {
+                if (typeof window.wordData !== 'undefined' && typeof window.wordData === 'object' && Object.keys(window.wordData).length > 0) {
+                    console.log('wordData已加载:', window.wordData);
+                    
+                    loadingSection.style.display = 'none';
+                    gameSection.style.display = 'block';
+                    
+                    if (initLessonSelect()) {
+                        console.log('游戏初始化成功');
                     } else {
-                        console.log('等待wordData加载...');
-                        setTimeout(check, 100);
+                        console.error('游戏初始化失败');
                     }
-                };
-                check();
-            });
-        }
-        
-        const timeout = setTimeout(() => {
-            if (typeof window.wordData === 'undefined') {
-                console.error('单词库加载超时');
-                loadingSection.innerHTML = '<p class="loading-text" style="color: red;">单词库加载超时，请检查网络连接并刷新页面</p>';
+                    
+                    return true;
+                } else {
+                    console.log('等待wordData加载...');
+                    setTimeout(checkWordDataLoaded, 100);
+                    return false;
+                }
             }
-        }, 10000);
-        
-        // 正确使用Promise
-        checkWordDataLoaded().then(() => {
-            clearTimeout(timeout);
-        }).catch(error => {
-            console.error('初始化错误:', error);
-            clearTimeout(timeout);
+            
+            const timeout = setTimeout(() => {
+                if (typeof window.wordData === 'undefined') {
+                    console.error('单词库加载超时');
+                    loadingSection.innerHTML = '<p class="loading-text" style="color: red;">单词库加载超时，请检查网络连接并刷新页面</p>';
+                }
+            }, 10000);
+            
+            checkWordDataLoaded().then(() => {
+                clearTimeout(timeout);
+            });
         });
-    });
-</script>      
+    </script>
 </body>
 </html>
