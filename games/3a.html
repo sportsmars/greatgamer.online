@@ -98,13 +98,6 @@
         </div>
     </div>
 
-    <!-- 音效元素 -->
-    <audio id="click-sound" src="../sounds/click.mp3" preload="auto"></audio>
-    <audio id="success-sound" src="../sounds/success.mp3" preload="auto"></audio>
-    <audio id="fail-sound" src="../sounds/fail.mp3" preload="auto"></audio>
-    <audio id="celebration-sound" src="../sounds/celebration.mp3" preload="auto"></audio>
-    <audio id="complete-sound" src="../sounds/complete.mp3" preload="auto"></audio>
-    
     <!-- 加载三年级上册单词库 -->
     <script src="../words/3a.js"></script>
     
@@ -136,12 +129,67 @@
         const celebrationScore = document.getElementById('celebration-score');
         const continueBtn = document.getElementById('continue-btn');
 
-        // 音效元素
-        const clickSound = document.getElementById('click-sound');
-        const successSound = document.getElementById('success-sound');
-        const failSound = document.getElementById('fail-sound');
-        const celebrationSound = document.getElementById('celebration-sound');
-        const completeSound = document.getElementById('complete-sound');
+        // 音频上下文和音效缓冲区
+        let audioContext;
+        const soundBuffers = {};
+        let audioUnlocked = false;
+
+        // 初始化音频上下文
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // 加载音效
+        async function loadSound(id, url) {
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                soundBuffers[id] = audioBuffer;
+                console.log(`音效 ${id} 加载成功`);
+            } catch (error) {
+                console.error(`音效 ${id} 加载失败:`, error);
+            }
+        }
+
+        // 播放音效
+        function playSound(id) {
+            if (!soundBuffers[id] || !audioUnlocked || audioContext.state !== 'running') {
+                console.warn(`无法播放音效 ${id}：音频未解锁或上下文未运行`);
+                return;
+            }
+            
+            const source = audioContext.createBufferSource();
+            source.buffer = soundBuffers[id];
+            source.connect(audioContext.destination);
+            source.start(0);
+        }
+
+        // 解锁音频系统（在用户首次交互时调用）
+        async function unlockAudio() {
+            if (audioUnlocked) return;
+            
+            initAudioContext();
+            
+            // 强制恢复音频上下文状态
+            if (audioContext.state !== 'running') {
+                await audioContext.resume();
+                console.log('音频上下文状态已恢复为 running');
+            }
+            
+            // 创建静默音频并播放（强制解锁 iOS/Windows 浏览器）
+            const buffer = audioContext.createBuffer(1, 1, 44100);
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+            
+            // 标记为已解锁
+            audioUnlocked = true;
+            console.log('音频系统已解锁');
+        }
 
         // 初始化单元选择下拉菜单
         function initLessonSelect() {
@@ -191,13 +239,27 @@
         }
 
         // 初始化游戏
-        function initGame() {
+        async function initGame() {
             console.log('正在初始化游戏...');
             
             if (!window.wordData || typeof window.wordData !== 'object' || Object.keys(window.wordData).length === 0) {
                 alert("单词库加载失败，请检查words.js文件并刷新页面");
                 return;
             }
+            
+            // 确保音频已解锁
+            if (!audioUnlocked) {
+                await unlockAudio();
+            }
+            
+            // 加载所有音效
+            await Promise.all([
+                loadSound('click', '../sounds/click.mp3'),
+                loadSound('success', '../sounds/success.mp3'),
+                loadSound('fail', '../sounds/fail.mp3'),
+                loadSound('celebration', '../sounds/celebration.mp3'),
+                loadSound('complete', '../sounds/complete.mp3')
+            ]);
             
             gameState.currentLesson = lessonSelect.value;
             gameState.selectedCards = [];
@@ -321,9 +383,9 @@
         // 处理卡片点击
         function handleCardClick(event) {
             const card = event.currentTarget;
-            
-            clickSound.currentTime = 0;
-            clickSound.play();
+
+            // 播放点击音效
+            playSound('click');
             
             if (card.classList.contains('matched') || card.classList.contains('selected')) {
                 return;
@@ -341,8 +403,8 @@
                 
                 if (card1.dataset.pair === card2.dataset.content && card2.dataset.pair === card1.dataset.content) {
                     setTimeout(() => {
-                        successSound.currentTime = 0;
-                        successSound.play();
+                        // 播放配对成功音效
+                        playSound('success');
                         
                         card1.classList.add('matched');
                         card2.classList.add('matched');
@@ -356,8 +418,8 @@
                     }, 500);
                 } else {
                     setTimeout(() => {
-                        failSound.currentTime = 0;
-                        failSound.play();
+                        // 播放配对失败音效
+                        playSound('fail');
                         
                         card1.classList.remove('selected');
                         card2.classList.remove('selected');
@@ -374,14 +436,14 @@
                     if (gameState.remainingWords.length > 0) {
                         celebrationScore.textContent = gameState.score;
                         celebration.classList.add('show');
-                        celebrationSound.currentTime = 0;
-                        celebrationSound.play();
+                        // 播放本轮完成音效
+                        playSound('celebration');
                     } else {
                         celebrationScore.textContent = gameState.score;
                         celebration.querySelector('h2').textContent = '恭喜完成游戏!';
                         celebration.classList.add('show');
-                        completeSound.currentTime = 0;
-                        completeSound.play();
+                        // 播放游戏完成音效
+                        playSound('complete');
                     }
                 }, 1000);
             }
@@ -400,7 +462,7 @@
                 const totalWords = lessonWords.length;
                 progressText = `进度: ${gameState.usedWords.length}/${totalWords} (第 ${gameState.currentBatch} 轮)`;
             }
-            progressInfo.textContent = progressText;
+            progressText.textContent = progressText;
         }
 
         // 数组洗牌函数
@@ -414,22 +476,75 @@
         }
 
         // 事件监听
-        startBtn.addEventListener('click', initGame);
-        resetBtn.addEventListener('click', initGame);
-        continueBtn.addEventListener('click', () => {
-            celebration.classList.remove('show');
-            celebration.querySelector('h2').textContent = '恭喜完成本轮!';
-            startNextBatch();
+        startBtn.addEventListener('click', async () => {
+            try {
+                // 确保音频系统已解锁
+                await unlockAudio();
+                // 初始化游戏
+                await initGame();
+            } catch (error) {
+                console.error('游戏初始化错误:', error);
+                alert('游戏初始化失败，请刷新页面重试');
+            }
+        });
+        
+        resetBtn.addEventListener('click', async () => {
+            try {
+                // 确保音频系统已解锁
+                if (!audioUnlocked) {
+                    await unlockAudio();
+                }
+                // 重新初始化游戏
+                await initGame();
+            } catch (error) {
+                console.error('游戏重置错误:', error);
+                alert('游戏重置失败，请刷新页面重试');
+            }
+        });
+        
+        continueBtn.addEventListener('click', async () => {
+            try {
+                // 确保音频系统已解锁
+                if (!audioUnlocked) {
+                    await unlockAudio();
+                }
+                celebration.classList.remove('show');
+                celebration.querySelector('h2').textContent = '恭喜完成本轮!';
+                startNextBatch();
+            } catch (error) {
+                console.error('继续游戏错误:', error);
+                alert('继续游戏失败，请刷新页面重试');
+            }
         });
 
         // 初始化 - 确保DOM和words.js都加载完成
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM已加载完成');
             
+            // 返回Promise的检查函数
             function checkWordDataLoaded() {
-                if (typeof window.wordData !== 'undefined' && typeof window.wordData === 'object' && Object.keys(window.wordData).length > 0) {
-                    console.log('wordData已加载:', window.wordData);
+                return new Promise((resolve, reject) => {
+                    const checkInterval = setInterval(() => {
+                        if (typeof window.wordData !== 'undefined' && 
+                            typeof window.wordData === 'object' && 
+                            Object.keys(window.wordData).length > 0) {
+                            clearInterval(checkInterval);
+                            console.log('wordData已加载:', window.wordData);
+                            resolve(true);
+                        }
+                    }, 100);
                     
+                    // 设置超时
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        reject(new Error('单词库加载超时'));
+                    }, 10000);
+                });
+            }
+            
+            // 正确处理Promise
+            checkWordDataLoaded()
+                .then(() => {
                     loadingSection.style.display = 'none';
                     gameSection.style.display = 'block';
                     
@@ -438,25 +553,11 @@
                     } else {
                         console.error('游戏初始化失败');
                     }
-                    
-                    return true;
-                } else {
-                    console.log('等待wordData加载...');
-                    setTimeout(checkWordDataLoaded, 100);
-                    return false;
-                }
-            }
-            
-            const timeout = setTimeout(() => {
-                if (typeof window.wordData === 'undefined') {
-                    console.error('单词库加载超时');
-                    loadingSection.innerHTML = '<p class="loading-text" style="color: red;">单词库加载超时，请检查网络连接并刷新页面</p>';
-                }
-            }, 10000);
-            
-            checkWordDataLoaded().then(() => {
-                clearTimeout(timeout);
-            });
+                })
+                .catch(error => {
+                    console.error('单词库加载失败:', error);
+                    loadingSection.innerHTML = '<p class="loading-text" style="color: red;">单词库加载失败，请检查网络连接并刷新页面</p>';
+                });
         });
     </script>
 </body>
