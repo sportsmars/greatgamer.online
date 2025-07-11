@@ -530,46 +530,55 @@
             celebration.querySelector('h2').textContent = '恭喜完成本轮!';
             startNextBatch();
         });
-
         // 初始化 - 确保DOM和words.js都加载完成
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM已加载完成');
-            
-            // 初始化音频系统
-            initAudio();
-            
-            function checkWordDataLoaded() {
-                if (typeof window.wordData !== 'undefined' && typeof window.wordData === 'object' && Object.keys(window.wordData).length > 0) {
-                    console.log('wordData已加载:', window.wordData);
-                    
-                    loadingSection.style.display = 'none';
-                    gameSection.style.display = 'block';
-                    
-                    if (initLessonSelect()) {
-                        console.log('游戏初始化成功');
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM已加载完成');
+        
+        // 初始化音频系统
+        initAudio();
+        
+        function checkWordDataLoaded() {
+            return new Promise((resolve) => {
+                const check = () => {
+                    if (typeof window.wordData !== 'undefined' && 
+                        typeof window.wordData === 'object' && 
+                        Object.keys(window.wordData).length > 0) {
+                        console.log('wordData已加载:', window.wordData);
+                        
+                        loadingSection.style.display = 'none';
+                        gameSection.style.display = 'block';
+                        
+                        if (initLessonSelect()) {
+                            console.log('游戏初始化成功');
+                            resolve(true);
+                        } else {
+                            console.error('游戏初始化失败');
+                            resolve(false);
+                        }
                     } else {
-                        console.error('游戏初始化失败');
+                        console.log('等待wordData加载...');
+                        setTimeout(check, 100);
                     }
-                    
-                    return true;
-                } else {
-                    console.log('等待wordData加载...');
-                    setTimeout(checkWordDataLoaded, 100);
-                    return false;
-                }
-            }
-            
-            const timeout = setTimeout(() => {
-                if (typeof window.wordData === 'undefined') {
-                    console.error('单词库加载超时');
-                    loadingSection.innerHTML = '<p class="loading-text" style="color: red;">单词库加载超时，请检查网络连接并刷新页面</p>';
-                }
-            }, 10000);
-            
-            checkWordDataLoaded().then(() => {
-                clearTimeout(timeout);
+                };
+                check();
             });
+        }
+        
+        const timeout = setTimeout(() => {
+            if (typeof window.wordData === 'undefined') {
+                console.error('单词库加载超时');
+                loadingSection.innerHTML = '<p class="loading-text" style="color: red;">单词库加载超时，请检查网络连接并刷新页面</p>';
+            }
+        }, 10000);
+        
+        // 正确使用Promise
+        checkWordDataLoaded().then(() => {
+            clearTimeout(timeout);
+        }).catch(error => {
+            console.error('初始化错误:', error);
+            clearTimeout(timeout);
         });
-    </script>
+    });
+</script>      
 </body>
 </html>
