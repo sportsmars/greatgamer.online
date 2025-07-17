@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词连连看</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/game.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .sr-only {
+            position: absolute; width: 1px; height: 1px;
+            overflow: hidden; clip: rect(0,0,0,0);
+        }
+        .game-controls {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;
+        }
+        .game-controls select, .game-controls button {
+            padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;
+        }
+        .game-controls button {
+            background: #4CAF50; color: white; border: none; cursor: pointer;
+        }
+        .game-controls button:disabled {
+            background: #ccc; cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container game-container">
+        <a href="index.html" class="back-btn">返回首页</a>
+        <h1 class="game-title" id="game-title">单词连连看</h1>
+
+        <div id="loading-section">
+            <div class="loader"></div>
+            <p class="loading-text">正在加载单词库...</p>
+        </div>
+
+        <div id="game-section" style="display: none;">
+            <div class="game-controls">
+                <label for="unit-select" class="sr-only">选择单元</label>
+                <select id="unit-select" aria-label="选择单元">
+                    <option value="all">全部单元</option>
+                </select>
+
+                <label for="topic-select" class="sr-only">选择主题</label>
+                <select id="topic-select" aria-label="选择主题" disabled>
+                    <option value="all">全部主题</option>
+                </select>
+
+                <button id="start-btn" disabled>开始游戏</button>
+            </div>
+
+            <div class="progress-info" id="progress-info">请选择单元并开始游戏</div>
+
+            <div class="game-info">
+                <div>得分: <span id="score">0</span></div>
+                <div>剩余配对: <span id="remaining">0</span></div>
+            </div>
+
+            <div class="game-board" id="game-board"></div>
+
+            <div class="celebration" id="celebration">
+                <h2>恭喜完成本轮!</h2>
+                <p>你的得分: <span id="celebration-score">0</span></p>
+                <button id="continue-btn">继续挑战</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音效 -->
+    <audio id="click-sound" src="sounds/click.mp3" preload="auto"></audio>
+    <audio id="success-sound" src="sounds/success.mp3" preload="auto"></audio>
+    <audio id="fail-sound" src="sounds/fail.mp3" preload="auto"></audio>
+    <audio id="celebration-sound" src="sounds/celebration.mp3" preload="auto"></audio>
+    <audio id="complete-sound" src="sounds/complete.mp3" preload="auto"></audio>
+
+    <!-- 动态加载对应年级单词库 -->
+<script>
+  // 1. 先加载单词库
+  const grade = new URLSearchParams(location.search).get('grade') || '3a';
+  const wordScript = document.createElement('script');
+  wordScript.src = `words/${grade}.js`;
+  wordScript.onload = () => {
+    // 2. 单词库 OK 后再加载游戏逻辑
+    const gameScript = document.createElement('script');
+    gameScript.src = 'js/game.js';
+    document.head.appendChild(gameScript);
+  };
+  wordScript.onerror = () => {
+    document.getElementById('loading-section').innerHTML =
+      '<p style="color:red">单词库加载失败，请确认年级参数正确</p>';
+  };
+  document.head.appendChild(wordScript);
+</script>
+
+</body>
+</html>
